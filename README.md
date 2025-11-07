@@ -1,4 +1,4 @@
-##  Water and Hydrate by Molecular Dynamics TIP5P Simulation ##
+##  Water and Hydrate by TIP5P Molecular Dynamics Simulation ##
 
 We are studying the microwave heating of water and ice by means of the molecular dynamics TIP5P model (with if_xyz2=.true.), and that of the ice and methane hydrate (with if_xyz1=.true.) by the same code.
 
@@ -239,4 +239,5 @@ Generator", J. Comput. Chem. 39, 61-64 (2017).
 
 5. M. Tanaka, Molecular dynamics simulation of methane hydrate by means of the TIP5P-Ewald model,
 https://arxiv.org/2311.01182, Cornell University Library, USA (2023, 2024).
+
 
