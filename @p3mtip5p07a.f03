@@ -85,7 +85,7 @@
 !*                                                               *
 !*****************************************************************
 !  Only parallel Fortran 2003: 
-!     mpif90 -mcmodel=medium -fpie @p3mtip5p07a.f03  &
+!     mpif90 -O2 -mcmodel=medium -fpie @p3mtip5p07a.f03  &
 !      -I/opt/fftw-3/include -L/opt/fftw-3/lib -lfftw3 
 !
 !  FT11 is opened at L.85 and closed at L.690. Afterwards it is
