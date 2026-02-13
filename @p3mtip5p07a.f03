@@ -1,12 +1,13 @@
-!************************************************** May, 2023 ****
+!*****************************************************************
 !*                                                               *
-!*  ## Molecular Dynamics Simulation of Water by TIP5P Model ##  *
-!*     - Microwave heating, ice below T=273 K is not melted      * 
+!*  ## Molecular Dynamics Simulation of Water TIP5P Model ##     *
+!*  - In microwave heating, the ice below T=273 K is compeletely *
+!*    crystallized and not melted ! - Ref.4 below                *
 !*                                                               *
 !*   Author: Motohiko Tanaka, Ph.D., Nagoya 464, Japan.          *
 !*                                                               *
 !*   Released by GPL-3.0 License, https://github.com/Mtanaka77/  *
-!*   Copyright(C) 2006-2024. All rights reserved.                *
+!*   Copyright(C) 2006-2026. All rights reserved.                *
 !*                                                               *
 !*   References                                                  * 
 !*   1) M.Tanaka, J.Comput.Phys., vol. 79, 206 (1988).           *
@@ -64,7 +65,7 @@
 !*                                                               *
 !*   Subroutines:                                                *
 !*                                                               *
-!*     run_md - read_conf                                        *
+!*     Run_MD - read_conf                                        *
 !*              init - initial loading, use read(17), read(30)   *
 !*              read(12)                                         *
 !*              interpol_charge_assign_function,                 *
@@ -84,12 +85,13 @@
 !*   * @wat_radtip507.f03 - pair distribution functions          *
 !*                                                               *
 !*****************************************************************
-!  Only parallel Fortran 2003: 
-!     mpif90 -O2 -mcmodel=medium -fpie @p3mtip5p07a.f03  &
-!      -I/opt/fftw-3/include -L/opt/fftw-3/lib -lfftw3 
+!-----------------------------------------------------------------
+!  Parallel Fortran 2003: 
+! $ mpif90 -mcmodel=medium -fpie -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
 !
 !  FT11 is opened at L.85 and closed at L.690. Afterwards it is
 !  by open/close statements when write's action is called.
+!-----------------------------------------------------------------
 !
       program es3d_tip5
 !
@@ -109,10 +111,10 @@
       call mpi_comm_rank (mpi_comm_world,rank,ierror)
       call mpi_comm_size (mpi_comm_world,size,ierror)
 !
-      ipar = 1 + rank               !! pe #= 1,2,3...
+      ipar = 1 + rank          !! PE number = 1,2,3...
 !
       io_pe = 0
-      if(ipar.eq.1) io_pe = 1 
+      if(ipar.eq.1) io_pe = 1  ! write(11,*)
 !        +++++++++
 !
       if(io_pe.eq.1) then
@@ -121,7 +123,7 @@
         write(11,*) "rank=",rank    ! FT11 is used
         write(11,*) "size=",size
 !
-!     Not closing FT11 up to L.700
+!     Not close FT11 up to L.735, and restart...
       end if
 !
       cl_first= 1
@@ -129,7 +131,7 @@
 !
 ! ----------------------------------------------------------
       wall_time0= wall_time1
-      call run_md (wall_time0,ipar,size,if_lj)
+      call Run_MD (wall_time0,ipar,size,if_lj)
 ! ----------------------------------------------------------
 !
       cl_first= 2
@@ -155,7 +157,7 @@
 !
 !
 !------------------------------------------------------
-      subroutine run_md (wall_time0,ipar,size,if_lj)
+      subroutine Run_MD (wall_time0,ipar,size,if_lj)
 !------------------------------------------------------
       use, intrinsic :: iso_c_binding 
       implicit  none
@@ -249,77 +251,78 @@
       call date_and_time_7 (cdate,ctime)
 !
       xleng= 7.
-      nframe= 4
+      nframe= 4   ! 4 pages/A4 (close to Letterpad)
 !
       if(io_pe.eq.1) then
 !       open (unit=77,file=praefixc//'.77'//suffix2//'.ps',form='formatted')
 !       call gopen (nframe)
 !       close(77)
 !
-        write(11,'(/,"<< tip5p water (trans + rotation) -- es3d >> ", &
+        write(11,'(/,"## tip5p water (trans + rotation) -- es3d ##", &
                 a8,/,"  today = ",a10,"  time = ",a8,/)') &
                                            label,cdate,ctime
 !
         write(11,'("size=",i6,"  ipar=",i6)') size,ipar
 !
-        write(11,*) "L.1230 if_obsv= ",if_obsv
+        write(11,*) "L.1435 if_obsv= ",if_obsv
         write(11,*) " if .false,, then it saves unformatted file FT15"
         write(11,*)
       end if
 !
-!**************************************************************
+!*************************************************************
 !*  rbmax: maximum bond length for /sprmul/.
 !
 !     rbmax= 1.5
 !
-!  All pe's are executed
-      call read_conf (praefix8)
+!  All PE's are executed, L. 2820
+      call READ_CONF (praefix8)
 !
       if(io_pe.eq.1) then
         write(11,*) "praefix8= ",praefix8
         write(11,*) " dt= ",dt
       end if
 !
-!--------------------------------------------------------------
-      istop = 0    ! signal for termination: istop= 1
-!--------------------------
+!----------------------------------------------------------
+      istop = 0    ! Signal for termination is: istop= 1
+!----------------------------------------------------------
 !****************************************
 !*  Prepare for graphic output.         *
 !****************************************
-!*  for 3-d plot of particles /pplt3d/.
+!*  For 3-D plot of particles /pplt3d/.
 !
       phi= -60.d0
       tht=  15.d0
 !
-      pi = 4.d0*atan(1.d0)   ! <- init,moldyn 
+      pi = 4.d0*atan(1.d0)   ! <- /initi/, /moldyn/ 
 !     +++++++++++++++++++++
       call ggauss 
 !
 !-----------------------------------------------------
 !*  System size (0., xmax), and Ewald sum parameter.
 !************************************
-!*   Step 1 : molecular dynamics.   *
+!*   Step 1 : Molecular dynamics.   *
 !************************************
 !
-!  from L.355, defined in /init/  L.3510
+!  from L.305, defined in /init/  L.3050
       t_unit= 1.0000d-14          ! 0.01 ps
       a_unit= 1.0000d-08          ! 1 Ang
       w_unit= 1.6605d-24*18.d0    ! H2O is the unit of time 
-      e_unit= 4.8033d-10
+      e_unit= 4.8033d-10          ! charge of electron
 !
 !     nq= nq0  !<-- param
 !     np= np0  !<-- param
-!    ---------------------------------------------------
+!                           initialize
+!    -----------------------------------------------------
       call init (xa,ya,za,ch,am,ep,qch,ag,vx,vy,vz,amm, &
                  e0,e1,e2,e3,A11,A12,A13,A21,A22,A23,   &
                  A31,A32,A33,nq,np)
-!    ---------------------------------------------------
+!    -----------------------------------------------------
 !** 
       if(kstart.eq.0) then
-!* A new run: kstart=0
+!* A new run: kstart= 0
 !
         if(io_pe.eq.1) then
-          write(11,*) "# water #"
+          write(11,*) "# Water #"
           write(11,'(10f8.4)') (ch(i),i=1,30)
 !
           if(np.gt.0) then
@@ -328,7 +331,7 @@
           end if
         end if
 !
-!* Restart data of kstart >= 1
+!* Restart data of kstart= 1
 !    these overwrite kstart=0 data, as continuation by FT12...
 !
       else if(kstart.ge.1) then
@@ -352,17 +355,18 @@
         close(12)
 !
         if(io_pe.eq.1) then
-          write(11,*) "file= ",praefixi//".12"//suffix1
+          write(11,*) "File= ",praefixi//".12"//suffix1
           write(11,'(" Restart data are loaded from FT12.....",/, &
                  "   FT12x:",a34,/,                               &
                  "   restart time is t8=",f15.2,/,                &
-                 " kstart=1... restart(warm) but with t=0.",/,    &
-                 " kstart=2,...from the second times",/)') &
+                 " kstart= 1... Restart(warm) but with t=0.",/,    &
+                 " kstart= 2,...From the second time",/)') &
                                      praefixi//'.12'//suffix1,t8
           write(11,*) " t8,it,is...=",t8,it,is,nq,np
         end if
       end if
 !
+!------------------------------------------------------------------
 !  Equation of motion:
 !  from L.280, call to /init/ of L.2830
 !                                       ^erg   
@@ -374,7 +378,7 @@
 !
 !* Define parameters of /ewald1-3/
 !  -------------------------------
-      Lewald = xmax          ! <--- init
+      Lewald = xmax          ! <--- /init/
       dmesh  = float(mesh)   ! <--- param_wat
 !
 !  -------------------------------
@@ -387,8 +391,8 @@
 !
 !
       if(io_pe.eq.1) then
-        write(11,'(" number of mx, my, mz: ",3i5,/)') mx,my,mz 
-        write(11,*) " p3m successfully initialized !"
+        write(11,'(" Number of mx, my, mz: ",3i5,/)') mx,my,mz 
+        write(11,*) " The p3m routine is successfully initialized !"
 !
         write(11,'(" xmax, alpha, vth0(water)=",1p3d15.6)') &
                                                xmax,alpha,vth0
@@ -397,7 +401,7 @@
       end if
 !
 !************************************
-!*   Step 2 : molecular dynamics.   *
+!*   Step 2 : Molecular dynamics.   *
 !************************************
 !*-----------------------------------------------------------
       call moldyn (xa,ya,za,xr,yr,zr,ch,am,ep,qch,ag,   & 
@@ -439,6 +443,8 @@
 !
 !**********************************************************
 !  History
+!     Graphic package is executed if you wish.
+!
 !       open (unit=77,file=praefixc//'.77'//suffix2//'.ps',      &
 !             status='unknown',position='append',form='formatted')
 !
@@ -448,7 +454,7 @@
       end if
 !
       return
-      end subroutine run_md
+      end subroutine Run_md
 !
 !
 !------------------------------------------------------------------
@@ -459,7 +465,7 @@
                          fec,fek,wall_time0,ipar,size,          &
                          if_lj,nq,np)
 !------------------------------------------------------------------
-!*  double precision.
+!*  Double precision.
       use, intrinsic :: iso_c_binding 
       implicit  none
 !
@@ -610,6 +616,7 @@
 !
 !        Start            Restart from t=0
       if(kstart.eq.0 .or. kstart.eq.1) then
+!
         t8= - dt          ! keep result of f(v)
 !       ********
 !
@@ -622,6 +629,7 @@
         iwc=  0  ! not (-1) as the first call
 !
         if(kstart.eq.0) then
+!
           do j= 1,nq1
           Lgx(j)= 0
           Lgy(j)= 0
@@ -644,11 +652,11 @@
         end if
       end if
 !
-!* table creation at restart
+!* Table creation at restart
 !-------------------------------------------------------
       if(io_pe.eq.1) then
         open (unit=13,file=praefixc//'.13'//suffix2,     &
-                    status='replace',form='unformatted') 
+                      status='replace',form='unformatted') 
 !
         zcp4   = zcp
         zcn4   = zcn
@@ -676,7 +684,7 @@
 !
       if(io_pe.eq.1) then
         open (unit=15,file=praefixc//'.15'//suffix2,     &
-                    status='replace',form='unformatted') 
+                      status='replace',form='unformatted') 
 !
         zcp4   = zcp
         zcn4   = zcn
@@ -711,6 +719,7 @@
 !  the first time is t8= 0. (it= 1)
 !
 !  Start 1000, and goto 1000
+!
  1000 dth= 0.5d0*dt
 !
       t8= t8 +dt
@@ -724,7 +733,7 @@
         close(11)   !<- Always close(11) except for diagnosis 
       end if
 !**
-!     tequil= 48850.d0  in TIP506_config.start1
+!     tequil= 48850.d0  in TIP506_config.START1
 !
       if(t8.ge.tequil) then
         if_tequil= .false.
@@ -733,7 +742,7 @@
           open (unit=11,file=praefixc//'.11'//suffix2,             & 
                 status='unknown',position='append',form='formatted')
 !
-          write(11,*) "## t8 > tequil has reached, a run continues ##"
+          write(11,*) "## t8 > tequil has reached, the run continues ##"
           write(11,*) "   time now is t8=",t8
           write(11,*)
 !
@@ -2164,8 +2173,8 @@
       implicit none
 !
       include    'param_tip5p_D07a.h'
-      include    'aslfftw3.f03' ! by SX
-!     include    'fftw3.f03'    ! by Intel, or parallel case
+!     include    'aslfftw3.f03' ! by SX
+      include    'fftw3.f03'    ! by Intel, or parallel case
 !              "call fftw_plan_with_nthreads" must be commented out 
 !
 !     integer(C_INT),save :: n_thread
@@ -2820,7 +2829,7 @@
 !
 !  Read /write configuration data.
 !------------------------------------------------------------------
-      subroutine read_conf (praefix8)
+      subroutine READ_CONF (praefix8)
 !------------------------------------------------------------------
       use, intrinsic :: iso_c_binding 
       implicit none
@@ -2937,7 +2946,7 @@
       end if
 !
       return
-      end subroutine read_conf
+      end subroutine READ_CONF
 !
 !
 !------------------------------------------------------------------------
