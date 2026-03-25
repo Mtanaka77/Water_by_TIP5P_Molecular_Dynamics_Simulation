@@ -1,8 +1,8 @@
 !*****************************************************************
 !*                                                               *
 !*  ## Molecular Dynamics Simulation of Water TIP5P Model ##     *
-!*  - In microwave heating, the ice below T=273 K is compeletely *
-!*    crystallized and not melted ! - Ref.4 below                *
+!*   In microwave heating, the ice below T=273 K (0 Celsius) is  * 
+!*   compeletely crystallized and is not melted - Ref.4 below    *
 !*                                                               *
 !*   Author: Motohiko Tanaka, Ph.D., Nagoya 464, Japan.          *
 !*                                                               *
