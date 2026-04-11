@@ -88,7 +88,7 @@
 !  >> gfortran
 !  $ mpif90 -mcmodel=medium -fpic -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
 !  >> PGFortran
-!  $ mpif90 -mcmodel=medium -fast -tp=px -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
+!  $ mpif90 -mcmodel=medium -fast -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
 !  $ mpiexec -n 6 a.out &  (proc>=6 or more
 !
 !  FT11 is opened at L.85 and closed at L.690. Afterwards it is
