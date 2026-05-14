@@ -11,7 +11,7 @@ The new results by the 5-body rotation coordinate system and TIP5P-Ewald model a
 and the PDF in the arXiv Library: https://arxiv.org/abs/2311.01182 (2023, 2024).
 
 The five-point molecules for water are used known as the TIP5P-Ewald model. 
-A four-water molecule is specified to calculate positive two hydrogens q_H= 0.241e 
+The five-water molecules are specified to calculate two hydrogens q_H= 0.241e 
 and negative two hydrogens q_L= -0.241e with e the electron charge. 
 The fifth oxygen atom called the dummy site q_O=0 is to correlate with adjacent molecules 
 using the Lennard-Jones potential Psi(r)= eps_A/r^12 -eps_B /r^6 (Ref. 2).  
