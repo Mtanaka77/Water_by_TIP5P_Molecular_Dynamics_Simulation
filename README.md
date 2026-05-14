@@ -13,7 +13,7 @@ and the PDF in the arXiv Library: https://arxiv.org/abs/2311.01182 (2023, 2024).
 The five-point molecules for water are used known as the TIP5P-Ewald model. 
 The five-water molecules are specified to calculate two hydrogens q_H= 0.241e 
 and negative two hydrogens q_L= -0.241e with e the electron charge. 
-The fifth oxygen atom called the dummy site q_O=0 is to correlate with adjacent molecules 
+The fifth oxygen atom of q_O= 0.0 is to correlate with adjacent molecules 
 using the Lennard-Jones potential Psi(r)= eps_A/r^12 -eps_B /r^6 (Ref. 2).  
 
 The fortran code with MPI is given in the file @p3mtip5p07a.f03 with additional files as param_tip5D07a.h, TIP507_config.start0, and initial coordinates 1cx666a.exyz and quaternions 1cx666a.q. Its description of the code is shown at README.md and also PDF documents of this repository. The latter documents are "Water_TIP5P_Simulation.pdf" for numerical coding, and for the physics simulation run by "Water_and_hydrate_molecules_by_TIP5P_code.pdf". 
