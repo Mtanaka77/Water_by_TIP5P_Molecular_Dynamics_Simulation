@@ -28,7 +28,7 @@ in the x-direction are shown in the PDF file "MDTip5pWater-8.pdf", the new versi
 
 As natural resources, however, the methanes are 30 times environmentally more hazardous 
 materials than carbon dioxide. The methane hydrate that will be mined and then burnt in air 
-should be confined back to the deep interior of the earth.
+should be confined back to the deep interior of the earth if we need it as natural resources.
 
 ### Procedure of Water Molecules by Five-Points Model ###
 
