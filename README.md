@@ -65,7 +65,7 @@ Dr. M. Matsumote (Ref. 4). This step is executed only at the first time step.
 2) The position $\bm{R}_{j}$ and velocity $\bm{V}_{j} $ of each molecule ($j=1,N/5$) are advanced by summation over three sites of forces $\bm{F}_{k}$ for the translational motion
 $(k=1,N)$,
 \begin{equation}
-d\bm{V}_{j}/dt= (1/m_{j})\sum_{k=1}^{3} \bm{F}_{k}, \ \ 
+d\bm{V}_{j}/dt= (1/m_{j})\sum_{k=1}^{5} \bm{F}_{k}, \ \ 
 d\bm{R}_{j}/dt= \bm{V}_{j}.
 \end{equation}
 
