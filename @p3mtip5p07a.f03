@@ -20,8 +20,8 @@
 !*      @p3mtip5p code name (p3m + tip5p)                        *
 !*      07a is a run name (07) and sequential number (a,b,c...)  *
 !*                                                               *
-!*   1. @p3mtip5p07aa.f03 : MD simulation code                   *
-!*   2. param_tip5p_D07a.h : parameter file, physical constants *
+!*   1. @p3mtip5p07a.f03 : MD simulation code                    *
+!*   2. param_tip5p_D07a.h : parameter file, physical constants  *
 !*   3. TIP507_config.start0 : parameter file, kstart=0          *
 !*      or continuation TIP507_config.start1 : kstart>=1         *
 !*   4. Initial molecules setting (exyz and quaternion)          *             
@@ -45,7 +45,7 @@
 !*                                                               *
 !************************************* First code: 02/26/2005 ****
 !*                                                               *
-!*  1. >>> run's name is given by param_tip5p_D07a.h            *
+!*  1. >>> run's name is given by param_tip5p_D07a.h             *
 !*                                                               *
 !*  2. >>> Run parameters are given in TIP07_config.start0, or 1 *
 !*       which is read by /read_conf/.                           *
@@ -86,7 +86,7 @@
 !*****************************************************************
 !  Only parallel Fortran 2003: 
 !  >> gfortran
-!  $ mpif90 -mcmodel=medium -fpic -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
+!  $ mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
 !  >> PGFortran
 !  $ mpif90 -mcmodel=medium -fast -tp=px -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
 !  $ mpiexec -n 6 a.out &  (proc>=6 or more
@@ -962,9 +962,12 @@
       j= j +1       ! for j
 !
       dtm= dt/amm(j) 
-      vx(j)= vx(j) + (fec(i,1)+fec(i+1,1)+fec(i+2,1))*dtm
-      vy(j)= vy(j) + (fec(i,2)+fec(i+1,2)+fec(i+2,2))*dtm
-      vz(j)= vz(j) + (fec(i,3)+fec(i+1,3)+fec(i+2,3))*dtm
+      vx(j)= vx(j) + &
+                   (fec(i,1)+fec(i+1,1)+fec(i+2,1)+fec(i+3,1)+fec(i+4,1))*dtm
+      vy(j)= vy(j) + & 
+                   (fec(i,2)+fec(i+1,2)+fec(i+2,2)+fec(i+3,2)+fec(i+4,2))*dtm
+      vz(j)= vz(j) + & 
+                   (fec(i,3)+fec(i+1,3)+fec(i+2,3)+fec(i+3,3)+fec(i+4,3))*dtm
 !
       xg1= (16*xa(i) +xa(i+1) +xa(i+2))/18.d0  ! --> x(n)
       yg1= (16*ya(i) +ya(i+1) +ya(i+2))/18.d0
@@ -3218,8 +3221,8 @@
       tip(l-4)= ' O'
       tip(l-3)= ' H'
       tip(l-2)= ' H'
-      tip(l-1)= ' L'
-      tip(l  )= ' L'
+      tip(l-1)= ' H'
+      tip(l  )= ' H'
       end do
 !
       do j= 1,nq1
