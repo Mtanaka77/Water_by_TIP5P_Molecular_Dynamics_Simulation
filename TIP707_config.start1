@@ -12,7 +12,7 @@
 # Radius of Cl (Ang)..................:    2.224000000000000
 # LJ energy of Na..0.0148, C..0.0374..:    0.014800000000000
 # LJ energy of Cl (kcal/mol)..........:    0.106400000000000
-# Temperature (Kelvin)...... 100 atm..:  230.000000000000000
+# Temperature (Kelvin)...... 100 atm..:  273.000000000000000
 # Ortsraum-Cutoff (Ang)...............:   10.000000000000000
 # LJ-Cutoff..1.1224620..>tip5p-Ewald..:    3.476300000000000
 # alpha..by Deserno 1999. 0.245..>new.:    0.350000000000000
