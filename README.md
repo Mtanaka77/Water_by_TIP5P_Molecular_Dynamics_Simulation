@@ -79,7 +79,7 @@ A_{13} & A_{23} & A_{33}
 xr_{k} \\ yr_{k} \\ zr_{k}
 \end{pmatrix}
 \end{equation*}
-at three sites $\bm{r}_{k}$ (k=1-3 above, plus k=4-5) and $\bm{R}_{i}$ from \textit{1)}.
+at three sites $\bm{r}_{k}$ (k=1-3 above), plus the dummy sites k=4-5, and $\bm{R}_{i}$ from \textit{1)}.
 
 7. Coulomb and LJ forces of the  four sites are calculated which is very heavily consumed
 of CPU. 
