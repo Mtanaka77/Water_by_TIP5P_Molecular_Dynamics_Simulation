@@ -81,8 +81,7 @@ xr_{k} \\ yr_{k} \\ zr_{k}
 \end{equation*}
 at three sites $\bm{r}_{k}$ (k=1-3 above), plus the virtual sites k=4-5, and $\bm{R}_{i}$ from \textit{1)}.
 
-7. Coulomb and LJ forces of the  four sites are calculated which is very heavily consumed
-of CPU. 
+7. Coulomb and LJ forces of the four sites and the oxygen site are calculated which is very heavily consumed of CPU. 
 
 8. Corrections of quaternions at every 10 steps are executed, and go to a new time step.
 
