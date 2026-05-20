@@ -245,6 +245,7 @@
 !
       character(len=2) tip,praefix8*8
       common/tipw/     tip(npq5)
+      character*2      suffix3
 !
 !**************************************************************
 !
@@ -335,6 +336,7 @@
 !    these overwrite kstart=0 data, as continuation by FT12...
 !
       else if(kstart.ge.1) then
+!     +++++++++++++++++++++++++
 !
         open (unit=12,file=praefixi//'.12'//suffix1,        & ! read(12)
                              status='old',form='unformatted') !  old
@@ -353,6 +355,41 @@
         read(12) iwa,iwb,iwc
         read(12) xmax,ymax,zmax,zcp,zcn
         close(12)
+!
+!
+! % mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
+!     parameter  (kstart=2,suffix2='0b', & ! 120b, kstart=2
+!                          suffix1='0a', & ! TIP501__0
+!                          suffix0='0')    ! 
+!     parameter  (kstart=2,suffix2='0c', & ! 120c, kstart=2
+!                          suffix1='0b', & ! TIP501__0
+!                          suffix0='1')    ! 
+! /home2, /lv01 
+!     ----------------
+        suffix3= '0z'  ! '0c'
+!
+        if(suffix2.eq.suffix3) then
+          tequil= t8   ! only the time when suffix2='0c'
+        end if
+!     ----------------
+!
+        if(io_pe.eq.1) then
+          write(11,*) "file= ",praefixi//".12"//suffix1
+          write(11,'(" Restart data are loaded from FT12.....",/, &
+                 "   FT12x:",a34,/,                               &
+                 "   restart time is t8=",f15.2,/,                &
+                 " kstart=1... restart(warm) but with t=0.",/,    &
+                 " kstart=2,...from the second times",/)') &
+                                     praefixi//'.12'//suffix1,t8
+!
+        if(io_pe.eq.1) then
+          write(11,*) "file= ",praefixi//".12"//suffix1
+          write(11,'(" Restart data are loaded from FT12.....",/, &
+                 "   FT12x:",a34,/,                               &
+                 "   restart time is t8=",f15.2,/,                &
+                 " kstart=1... restart(warm) but with t=0.",/,    &
+                 " kstart=2,...from the second times",/)') &
+                                     praefixi//'.12'//suffix1,t8
 !
         if(io_pe.eq.1) then
           write(11,*) "file= ",praefixi//".12"//suffix1
@@ -727,7 +764,11 @@
         close(11)   !<- Always close(11) except for diagnosis 
       end if
 !**
-!     tequil= 48850.d0  in TIP506_config.start1
+!  [2]
+!  ++++++++++++++++++++++++++++++++++++++++++
+!    exc> 0 of t>= tequil at restart, L.358
+!  ++++++++++++++++++++++++++++++++++++++++++
+!
 !
       if(t8.ge.tequil) then
         if_tequil= .false.
@@ -744,6 +785,10 @@
         end if
       end if
 !
+!
+!  *********************
+!   exc> 0 if t> tequil
+!  *********************
 !
       if(t8.lt.tequil) then
         exc = 0.d0
@@ -796,7 +841,9 @@
       if(temperat.lt.273.d0) go to 230
 !                 +++++++++ 
 !
+! **************************
 !  Pseudo salt is wiped out: 
+! **************************
 !   t_wipe_sta=1700. and t_wipe_end=4700 
 !
       t_wipe= t_wipe_end -t_wipe_sta  
@@ -1472,8 +1519,8 @@
 !************************************************************
 !* Restart data.
       if(io_pe.eq.1 .and. iwrth.eq.0) then
-!
-        open (unit=12,file=praefixe//'.12'//suffix2,        &
+!                                           ++++++++++++ save
+        open (unit=12,file=praefixe//'.12'//suffix2//'-1',   &
                          status='replace',form='unformatted')
 
         write(12) it,is,nq,np,if_lj                 !<- np=0 
@@ -3171,8 +3218,8 @@
 !
 !  [1] number of atoms for water
       else if(if_xyz2) then
-        nq=  nq0  ! 1cx666a.exyz <- nq=8640 atoms (6912,4-body)
-        np=  np0  ! Salt ions    <- np=4
+        nq= 8640  ! 1cx666a.exyz <- nq=8640 atoms (6912,4-body)
+        np=    0  ! Salt ions    <- np=0
       end if
 !
       nwaTIP5= nq
