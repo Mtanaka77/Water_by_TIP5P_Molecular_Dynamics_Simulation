@@ -53,7 +53,7 @@ e. After correction of quaternions, go to the beginning of the cycle. The leap-f
 0. Read the quaternions from the file, read(30) e0,e1,e2,e3, i=1-N.
 
 1. Sum the sites and, $ d\bm{N_i}/dt=\sum_{k=1}^{5} \bm{F}_{i,k}/m_{i}, 
-d\bm{R}_{i}/dt=\bm{V}_{i} $ with the translational motion.
+d\bm{R}_{i}/dt=\bm{V}_{i} $ with the translational motion. The initial (xr,yr,zr) and $ (Im_x,Im_y,Im_z) $ are memorized.
 
 2. $ d\bm{L}_i/dt=(
 \sum_{k=1}^{5}(y_{i,k}F_{i,k}^{z}-z_{i,k}F_{i.k}^{y},
