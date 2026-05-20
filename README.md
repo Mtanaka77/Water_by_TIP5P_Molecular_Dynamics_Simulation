@@ -61,7 +61,7 @@ d\bm{R}_{i}/dt=\bm{V}_{i} $ with the translational motion.
 \sum_{k=1}^{5}(x_{i,k}F_{i,k}^{y}-y_{i,k}F_{i.k}^{x}) $ for the
 rotation matrix, summation over four sites.
 
-3. $ \omega_{i,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $Im_{\alpha}$ for $\alpha=x,y,z$.
+3. $ \omega_{i,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
 
 6. $ d\bm{q}_i/dt=Q(e_{i,0},e_{i,1},e_{i,2},e{i,3})(\omega_{i,x},\omega_{i,y},\omega_{i,z},0) $ for $\bm{q}$ of Q and $\bm{\omega}$, by the Goldstein book, and get a 
 new rotation matrix $A_{i,j}$.
