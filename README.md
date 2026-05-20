@@ -79,7 +79,7 @@ A_{13} & A_{23} & A_{33}
 xr_{i} \\ yr_{i} \\ zr_{i}
 \end{pmatrix}
 \end{equation*}
-at three sites $\bm{r}_{i}$ (i=1-3 above), plus the virtual sites i=4-5, and $\bm{R}_{j}$ from \textit{1)}.
+at three sites $\bm{r}_{i}$ (i=1-3 above), plus the virtual sites i=4-5, and $\bm{R}_{j}$ from \textit{Nr.1}.
 
 9. Coulomb and LJ forces of the four sites and the oxygen site are calculated, which are  very heavily consumed of CPU. 
 
