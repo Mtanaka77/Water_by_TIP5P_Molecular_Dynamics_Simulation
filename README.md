@@ -30,11 +30,6 @@ As natural resources, however, the methanes are 30 times environmentally more ha
 materials than carbon dioxide. The methane hydrate that will be mined and then burnt in air 
 should be confined back to the deep interior of the earth if we need it as natural resources.
 
-### Procedure of Water Molecules by Five-Points Model ###
-
-The important points of the five-body molecules are summarized.
-(LaTeX is used for this and the next section.)
-
 
 ### Water Molecule Simulation by the TIP5P Model ###
    
