@@ -37,9 +37,9 @@ should be confined back to the deep interior of the earth if we need it as natur
 
 Summary
 
-a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are called the dummy sites.
+a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are known geometrically and called the dummy sites.
 
-b. Separate $\bm{R}_i$, $\bm{V}_i$ and $\bm{r}_{i}$ for water with $i=1-N$ molecules, and $ (x_{k},y_{k},z_{k})$ means for the five sites $k=1-5$. The saparation is done at the starting step only; once determined at $t=0$, they are constant in time.
+b. Separate $\bm{R}_i$, $\bm{V}_i$ and $\bm{r}_{i}$ for water with $i=1-N$ molecules, and $ (x_{k},y_{k},z_{k})$ means for the three sites $k=1-3$. The saparation is done at the starting step only; once determined at $t=0$, they are constant in time.
 
 c. The half time step is first executed for a predictor step, and the full step is made for a correction time.
 
