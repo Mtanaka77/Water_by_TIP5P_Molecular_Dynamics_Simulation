@@ -56,9 +56,9 @@ e. After correction of quaternions, go to the beginning of the cycle. The leap-f
 d\bm{R}_{i}/dt=\bm{V}_{i} $ with the translational motion. The initial (xr,yr,zr) and $ (Im_x,Im_y,Im_z) $ of molecules are memorized.
 
 2. $ d\bm{L}_i/dt=(
-\sum_{k=1}^{5}(y_{i,k}F_{i,k}^{z}-z_{i,k}F_{i.k}^{y},
-\sum_{k=1}^{5}(z_{i,k}F_{i,k}^{x}-x_{i,k}F_{i.k}^{z},
-\sum_{k=1}^{5}(x_{i,k}F_{i,k}^{y}-y_{i,k}F_{i.k}^{x}) $ for the
+\sum_{k=1}^{5}(y_{k}F_{i,k}^{z}-z_{k}F_{i.k}^{y},
+\sum_{k=1}^{5}(z_{k}F_{i,k}^{x}-x_{k}F_{i.k}^{z},
+\sum_{k=1}^{5}(x_{k}F_{i,k}^{y}-y_{k}F_{i.k}^{x}) $ for the
 rotation matrix, summation over four sites.
 
 3. $ \omega_{i,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
@@ -69,17 +69,17 @@ new rotation matrix $A_{i,j}$.
 7. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $ of the time step.
 
 8. \begin{equation*}
- \bm{r}_{i}=\bm{R}_{j}+
+ \bm{r}_{k}=\bm{R}_{i}+
 \begin{pmatrix}
 A_{11} & A_{21} & A_{31} \\ 
 A_{12} & A_{22} & A_{32} \\
 A_{13} & A_{23} & A_{33} 
 \end{pmatrix}
 \begin{pmatrix}
-xr_{i} \\ yr_{i} \\ zr_{i}
+xr_{k} \\ yr_{k} \\ zr_{k}
 \end{pmatrix}
 \end{equation*}
-at three sites $\bm{r}_{i}$ (i=1-3 above), plus the virtual sites i=4-5, and $\bm{R}_{j}$ from \textit{Nr.1}.
+at three sites $\bm{r}_{k}$ (k=1-3 above), plus the virtual sites k=4-5, and $\bm{R}_{i}$ from \textit{Nr.1}.
 
 9. Coulomb and LJ forces of the four sites and the oxygen site are calculated, which are  very heavily consumed of CPU. 
 
