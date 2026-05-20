@@ -76,7 +76,7 @@ A_{12} & A_{22} & A_{32} \\
 A_{13} & A_{23} & A_{33} 
 \end{pmatrix}
 \begin{pmatrix}
-x_{k} \\ y_{k} \\ z_{k}
+xr_{k} \\ yr_{k} \\ zr_{k}
 \end{pmatrix}
 \end{equation*}
 at three sites $\bm{r}_{i}$ and $\bm{R}_{i}$ from \textit{1)}.
