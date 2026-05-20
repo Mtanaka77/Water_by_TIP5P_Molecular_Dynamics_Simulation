@@ -69,7 +69,7 @@ new rotation matrix $A_{i,j}$.
 5. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $ of the time step.
 
 6. \begin{equation*}
- \bm{r}_{i}=\bm{R}_{i}+%\sum_{k=1}^{3}
+ \bm{r}_{i}=\bm{R}_{i}+
 \begin{pmatrix}
 A_{11} & A_{21} & A_{31} \\ 
 A_{12} & A_{22} & A_{32} \\
@@ -85,6 +85,7 @@ at three sites $\bm{r}_{i}$ and $\bm{R}_{i}$ from \textit{1)}.
 of CPU. 
 
 8. Corrections of quaternions at every 10 steps are executed, and go to a new time step.
+
 
 ### The Lennard-Jones Potential ###
 
