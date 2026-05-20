@@ -86,8 +86,7 @@ at three sites $\bm{r}_{i}$ and $\bm{R}_{i}$ from \textit{1)}.
 7. Coulomb and LJ forces of the  four sites are calculated which is very heavily consumed
 of CPU. 
 
-8. Corrections of quaternions at every 10 steps are executed, and go to the new time step
-.
+8. Corrections of quaternions at every 10 steps are executed, and go to a new time step.
 
 ### The Lennard-Jones Potential ###
 
