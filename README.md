@@ -39,12 +39,11 @@ Summary
 
 a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are called the dummy sites.
 
-b. Separate $\bm{R}_i$, $\bm{V}_i$ and $\bm{r}_{i}$ for water with $i\hspace{-3pt}=1\hspace{-3pt}-\hspace{-3pt}N$ molecules, and %$\bm{s}_{i,k}\hspace{-3pt}=\hspace{-3pt}
-$ (x_{k},y_{k},z_{k})$ means for the five sites $k\hspace{-3pt}=1\hspace{-3pt}-\hspace{-3pt}5$. The saparation is done at the starting step only; once determined at $t\hspace{-3pt}=\hspace{-3pt}0$, they are constant in time.
+b. Separate $\bm{R}_i$, $\bm{V}_i$ and $\bm{r}_{i}$ for water with $i\hspace{-3pt}=1\hspace{-3pt}-\hspace{-3pt}N$ molecules, and $ (x_{k},y_{k},z_{k})$ means for the five sites $k=1-5$. The saparation is done at the starting step only; once determined at $t=0$, they are constant in time.
 
 c. The half time step is first executed for a predictor step, and the full step is made for a correction time.
 
-d. Before the end of one step, the forces are calculated at $\bm{r}_{i}\hspace{-3pt}=\hspace{-3pt}\bm{R}_i\hspace{-3pt}+\hspace{-3pt}\sum_{k=1}^{3}A^{-1}\bm{s}_{i,k}$ with the three sites $k\hspace{-3pt}=1\hspace{-3pt}-\hspace{-3pt}3$, and the L sites are also calculated by algebraic operation. 
+d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{i}+\sum_{k=1}^{3}A^{-1}\bm{s}_{i,k}$ with the three sites $k=1-3$, and the L sites are also calculated by algebraic operation. 
 
 e. After correction of quaternions, go to the beginning of the cycle. The leap-frog method is used for the plasmas and waters.
 
