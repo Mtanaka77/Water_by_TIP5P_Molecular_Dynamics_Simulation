@@ -52,20 +52,26 @@ e. After correction of quaternions, go to the beginning of the cycle. The leap-f
 
 0. Read the quaternions from the file, read(30) e0,e1,e2,e3, j=1-N/5.
 
-1. Sum the sites, $ d\bm{N_{j}}/dt=\sum_{k=1}^{N} \bm{F}_{i,k}/m_{j}, 
+1. Sum the sites, $ d\bm{N_{j}}/dt=\sum_{k=1}^{5} \bm{F}_{i,k}/m_{j}, 
 d\bm{R}_{j}/dt=\bm{V}_{j} $ with the translational motion. The (xr,yr,zr) and $ (Im_x,Im_y,Im_z) $ of molecules are the constants of time.
 
-2. $ d\bm{L}_{j}/dt=(
-\sum_{k=1}^{5}(y_{k}F_{i,k}^{z}-z_{k}F_{i.k}^{y},
-\sum_{k=1}^{5}(z_{k}F_{i,k}^{x}-x_{k}F_{i.k}^{z},
-\sum_{k=1}^{5}(x_{k}F_{i,k}^{y}-y_{k}F_{i.k}^{x}) $ for the
+2. $ d\bm{L}_{j}/dt=(\sum_{k=1}^{5}
+(y_{k}F_{i,k}^{z}-z_{k}F_{i.k}^{y},
+ z_{k}F_{i,k}^{x}-x_{k}F_{i.k}^{z},
+ x_{k}F_{i,k}^{y}-y_{k}F_{i.k}^{x}) $ for the
 rotation matrix, summation over four sites.
 
-3. $ \omega_{j,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
+3. $ \omega_{j,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}
++A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$
+and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
 
-4. $ d\bm{q}_{j}/dt=Q(e_{i,0},e_{i,1},e_{i,2},e_{i,3}) (\omega_{j,x},\omega_{j,y},\omaga_{j,z}) $ for $\bm{q}$ of Q and $\bm{\omega}$, by the Goldstein's book, and get a new rotation matrix $$.
+4. $ d\bm{q}_{j}/dt=Q(e_{i,0},e_{i,1},e_{i,2},e_{i,3})
+(\omega_{j,x},\omega_{j,y},\omaga_{j,z}) $ for $\bm{q}$ of
+Q and $\bm{\omega}$, by the Goldstein's book, and
+get a new rotation matrix $$.
 
-5. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $ of the time step.
+5. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $
+of the time step.
 
 6. \begin{equation*}
  \bm{r}_{i}=\bm{R}_{j}+
