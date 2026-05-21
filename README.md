@@ -65,7 +65,7 @@ summation over five sites.
 +A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$
 and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
 
-4. $ d\bm{q}_{j}/dt= (\Delta t/2)
+4. $ d\bm{q}_{j}/dt= (\Delta t/2) 
 (-e_{1}\omega_{x}-e_{2}\omega_{y}-e_{3}\omega_{z}, 
 e_{0}\omega_{x}-e_{3}\omega_{y}+e_{2}\omega_{z}, 
 e_{3}\omega_{x}+e_{0}\omega_{y}-e_{1}\omega_{z},
