@@ -43,7 +43,7 @@ b. Separate $\bm{R}_{j}$, $\bm{V}_{j}$ and $\bm{r}_{i}$ for water with $j=1-N/5$
 
 c. The half time step is first executed for a predictor, and the full step is made for a corrector.
 
-d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{j}+(A11*xr(i)+A21*yr(i)+A31*zr(i)), etc.$ with the three sites $i=1-3, 6-8, 11-13...$, and the L sites are also calculated by algebraic operation. 
+d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{j}+(A11*xr(i)+A21*yr(i)+A31*zr(i)), etc.$ with the three sites $i=1-3, 6-8, 11-13...$, and the L sites are calculated by algebraic operation. 
 
 e. After correction of quaternions, go to the beginning of the cycle. The leap-frog method is used for the plasmas and waters.
 
