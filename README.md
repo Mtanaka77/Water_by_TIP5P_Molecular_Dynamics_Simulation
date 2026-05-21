@@ -65,10 +65,12 @@ summation over five sites.
 +A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$
 and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
 
-4. $ d\bm{q}_{j}/dt= Q(e_{i,0},e_{i,1},e_{i,2},e_{i,3})
-(\omega_{j,x},\omega_{j,y},\omaga_{j,z}) $ for $\bm{q}$ of
-Q and $\bm{\omega}$, by the Goldstein's book, and
-get a new rotation matrix.
+4. $ d\bm{q}_{j}/dt= (\Delta t/2)
+(-e_{1}\omega_{x}-e_{2}\omega_{y}-e_{3}\omega_{z}, 
+e_{0}\omega_{x}-e_{3}\omega_{y}+e_{2}\omega_{z}, 
+e_{3}\omega_{x}+e_{0}\omega_{y}-e_{1}\omega_{z},
+-e_{2}\omega_{x}+e_{1}\omega_{y}+e_{0}\omega_{z}) $
+for $\bm{q}_{j}$, $\bm{\omega}$, $(e_{0},e_{1},e_{2},e_{3})$ by the Goldstein's book, and get a new rotation matrix.
 
 5. Get a new rotation matrix of $ A(e_{0},e_{1},e_{2},e_{3}) $
 of the time step.
