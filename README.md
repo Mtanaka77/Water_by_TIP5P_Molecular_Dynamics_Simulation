@@ -37,53 +37,52 @@ should be confined back to the deep interior of the earth if we need it as natur
 
 Summary
 
-a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are known geometrically from H-O-H and called the dummy sites.
+a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are  geometrically known from H-O-H and called the dummy sites.
 
-b. Separate $\bm{R}_{i}$, $\bm{V}_{i}$ and $\bm{r}_{i}$ for water with $i=1-N$ molecules, and $ (x_{k},y_{k},z_{k})$ means for the three sites $k=1-3$. The separation is done at the starting step only; once determined at $t=0$, they are constant in time.
+b. Separate $\bm{R}_{j}$, $\bm{V}_{j}$ and $\bm{r}_{i}$ for water with $j=1-N/5$ molecules and $i=1-N$ atoms, and $ (x_{i},y_{i},z_{i})$ means for the five sites. The separation is done at the starting step only; once determined at $t=0$, they are constant in time.
 
-c. The half time step is first executed for a predictor step, and the full step is made for a correction time.
+c. The half time step is first executed for a predictor, and the full step is made for a corrector.
 
-d. Before the end of one step, the forces are calculated at $\bm{r}_{k}=\bm{R}_{i}+(A11*xr(k)+A21*yr(k)+A31*zr(k)), etc.$ with the three sites $k=1-3$, and the L sites are also calculated by algebraic operation. 
+d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{j}+(A11*xr(i)+A21*yr(i)+A31*zr(i)), etc.$ with the three sites $i=1-3, 6-8, 11-13...$, and the L sites are also calculated by algebraic operation. 
 
 e. After correction of quaternions, go to the beginning of the cycle. The leap-frog method is used for the plasmas and waters.
 
 
 * Each step consists of translation (1), rotation (2)-(4), and addition of field (5)-(8).
 
-0. Read the quaternions from the file, read(30) e0,e1,e2,e3, i=1-N.
+0. Read the quaternions from the file, read(30) e0,e1,e2,e3, j=1-N/5.
 
-1. Sum the sites and, $ d\bm{N_{i}}/dt=\sum_{k=1}^{5} \bm{F}_{i,k}/m_{i}, 
-d\bm{R}_{i}/dt=\bm{V}_{i} $ with the translational motion. The initial (xr,yr,zr) and $ (Im_x,Im_y,Im_z) $ of molecules are memorized.
+1. Sum the sites, $ d\bm{N_{j}}/dt=\sum_{k=1}^{N} \bm{F}_{i,k}/m_{j}, 
+d\bm{R}_{j}/dt=\bm{V}_{j} $ with the translational motion. The (xr,yr,zr) and $ (Im_x,Im_y,Im_z) $ of molecules are the constants of time.
 
-2. $ d\bm{L}_{i}/dt=(
+2. $ d\bm{L}_{j}/dt=(
 \sum_{k=1}^{5}(y_{k}F_{i,k}^{z}-z_{k}F_{i.k}^{y},
 \sum_{k=1}^{5}(z_{k}F_{i,k}^{x}-x_{k}F_{i.k}^{z},
 \sum_{k=1}^{5}(x_{k}F_{i,k}^{y}-y_{k}F_{i.k}^{x}) $ for the
 rotation matrix, summation over four sites.
 
-3. $ \omega_{i,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
+3. $ \omega_{j,\alpha}=(A_{\alpha 1}L_{x}+A_{\alpha 2}L_{y}+A_{\alpha 3}L_{z})/Im_{\alpha} $ for speices $A_{\alpha \beta}$ and moment inertia $\rm{Im}_{\alpha}$ for $\alpha=x,y,z$.
 
-6. $ d\bm{q}_{i}/dt=Q(e_{i,0},e_{i,1},e_{i,2},e{i,3})(\omega_{i,x},\omega_{i,y},\omega_{i,z},0) $ for $\bm{q}$ of Q and $\bm{\omega}$, by the Goldstein book, and get a 
-new rotation matrix $A_{i,j}$.
+4. $ d\bm{q}_{j}/dt=Q(e_{i,0},e_{i,1},e_{i,2},e_{i,3}) (\omega_{j,x},\omega_{j,y},\omaga_{j,z}) $ for $\bm{q}$ of Q and $\bm{\omega}$, by the Goldstein's book, and get a new rotation matrix $$.
 
-7. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $ of the time step.
+5. Get a new rotation matrix $ A(e_{0},e_{1},e_{2},e_{3}) $ of the time step.
 
-8. \begin{equation*}
- \bm{r}_{k}=\bm{R}_{i}+
+6. \begin{equation*}
+ \bm{r}_{i}=\bm{R}_{j}+
 \begin{pmatrix}
 A_{11} & A_{21} & A_{31} \\ 
 A_{12} & A_{22} & A_{32} \\
 A_{13} & A_{23} & A_{33} 
 \end{pmatrix}
 \begin{pmatrix}
-xr_{k} \\ yr_{k} \\ zr_{k}
+xr_{i} \\ yr_{i} \\ zr_{i}
 \end{pmatrix}
 \end{equation*}
-at three sites $\bm{r}_{k}$ (k=1-3 above), plus the virtual sites k=4-5, and $\bm{R}_{i}$ from \textit{Nr.1}.
+at three sites $\bm{r}_{i}$ plus the virtual sites (i=1-N), and $\bm{R}_{j}$ from \textit{Nr.1}.
 
-9. Coulomb and LJ forces of the four sites and the oxygen site are calculated, which are  very heavily consumed of CPU. 
+7. Coulomb and LJ forces of the four sites and the oxygen site are calculated, which are  very heavily consumed of CPU. 
 
-10. Corrections of quaternions at every 10 steps are executed, and go to a new time step.
+8. Corrections of quaternions at every 10 steps are executed, and go to the new time step.
 
 
 ### The Lennard-Jones Potential ###
