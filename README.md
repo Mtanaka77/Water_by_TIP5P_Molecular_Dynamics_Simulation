@@ -31,7 +31,7 @@ materials than carbon dioxide. The methane hydrate that will be mined and then b
 should be confined back to the deep interior of the earth if we need it as natural resources.
 
 
-### Water Molecule Simulation by the TIP5P Model ###
+### Molecular Dynamics Simulation by the TIP5P Model ###
    
    Motohiko Tanaka, Ph.D., Nagoya, Japan
 
@@ -39,7 +39,7 @@ Summary
 
 a. Five sites are oxygen (O), hydrogens ($H_1, H_2$), and the virtual sites ($L_1, L_2$). They have charges of 0.0, 0.241e, -0.241e, respectively. The $L_1, L_2$ are  geometrically known from H-O-H and called the dummy sites.
 
-b. Position $\bm{R}_{j}$ and velocity $\bm{V}_{j}$ are the translation of $j=1-N/5$ and that of $\bm{r}_{i}$ for the rotation of $j=1-N/5$ molecules and $i=1-N$ atoms. Rotation coordinate $ (x_{i},y_{i},z_{i})$ means for the five sites. Separation of translation and rotation coordinates is done at the starting step..
+b. Position $\bm{R}_{j}$ and velocity $\bm{V}_{j}$ are for the translation of $j=1-N/5$ and that of $\bm{r}_{i}$ for the rotation of $j=1-N/5$ molecules and $i=1-N$ atoms. Rotation coordinate $ (x_{i},y_{i},z_{i})$ means for the five sites. Separation of translation and rotation coordinates is done at the starting step..
 
 c. The half time step is first executed for a predictor, and the full step is made for a corrector.
 
