@@ -75,7 +75,8 @@ for $\bm{q}_{j}$, $\bm{\omega}$, $(e_{0},e_{1},e_{2},e_{3})$ by the Goldstein's 
 5. Get a new rotation matrix of $ A(e_{0},e_{1},e_{2},e_{3}) $
 of the time step.
 
-6. \begin{equation*}
+6. The rotation $ \bm{r}_{i}$ and $(xr_{i},yr_{i},zr_{i})$ are: \\
+\begin{equation*}
  \bm{r}_{i}=\bm{R}_{j}+
 \begin{pmatrix}
 A_{11} & A_{21} & A_{31} \\ 
