@@ -43,7 +43,7 @@ b. Position $\bm{R}_{j}$ and velocity $\bm{V}_{j}$ are the translation of $j=1-N
 
 c. The half time step is first executed for a predictor, and the full step is made for a corrector.
 
-d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{j}+(A11*xr(i)+A21*yr(i)+A31*zr(i)), etc.$ with the three sites $i=1-3, 6-8, 11-13...$, and the L sites are calculated by algebraic operation. 
+d. Before the end of one step, the forces are calculated at $\bm{r}_{i}=\bm{R}_{j}+(A11*xr(i)+A21*yr(i)+A31*zr(i))$, with $(xr,yr,zr)$ being the rotation of principal coordinates, and the three sites out of $i=1\hspace{-3pt}-\hspace{-3pt}N$, and the L sites are calculated by algebraic operation. 
 
 e. After correction of quaternions, go to the beginning of the cycle. The leap-frog method is used for the plasmas and waters.
 
