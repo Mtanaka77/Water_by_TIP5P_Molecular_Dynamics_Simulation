@@ -1,14 +1,13 @@
-!************************************************** May, 2023 ****
+!*** May 2023 ***********:*************************** May 2026 ***
 !*                                                               *
-!*  ## Molecular Dynamics Simulation of Water by TIP5P Model ##  *
-!*     - Microwave heating, ice below T=273 K is not melted      * 
+!*   # Molecular Dynamics of Water and Hydrate by TIP5P Model #  *
+!*     - Microwaves heating and collapse (if_xyz1=.true.) -      * 
 !*                                                               *
-!*   Author: Motohiko Tanaka, Ph.D., Chukusa, Nagoya 464, Japan. *
-!*                                                               *
+!*   Author/Maintainer: Motohiko Tanaka, Ph.D., Japan            *
 !*   Released by GPL-3.0 License, https://github.com/Mtanaka77/  *
-!*   Copyright(C) 2006-2024. All rights reserved.                *
+!*   Copyright(C) 2006-2026. All rights reserved.                *
 !*                                                               *
-!*   References                                                  * 
+!*   Reference                                                   * 
 !*   1) M.Tanaka, J.Comput.Phys., vol. 79, 206 (1988).           *
 !*   2) M.Tanaka, J.Comput.Phys., vol.107, 124 (1993).           *
 !*   3) M.Tanaka, Comput.Phys.Comm., vol.87, 117 (1995).         *
@@ -17,82 +16,65 @@
 !* ------------------------------------------------------------  *
 !*                                                               *
 !*   Files for this simulation                                   *
-!*      @p3mtip5p code name (p3m + tip5p)                        *
-!*      07a is a run name (07) and sequential number (a,b,c...)  *
-!*                                                               *
-!*   1. @p3mtip5p07a.f03 : MD simulation code                    *
+!*   1. @p3mtip5p07a.f03 : simulation code                       *
 !*   2. param_tip5p_D07a.h : parameter file, physical constants  *
-!*   3. TIP507_config.start0 : parameter file, kstart=0          *
-!*      or continuation TIP507_config.start1 : kstart>=1         *
-!*   4. Initial molecules setting (exyz and quaternion)          *             
-!*      1cx666a.exyz/1cx666a.q for liquid water, 1cx666b.xyz in  *
-!*      230 K, or mh3.exyz,mh3.q for methane hydrate.            *  
-!*      Refer to if_xyz1 or if_xyz2 parts in subroutine /init/.  *
-!*                                                               *
-!*   +  Generic function names are used, for example, they are   *
-!*      anint <- dnint, abs <- dabs, cabs, etc.                  * 
-!*      cmplx(real,imag,kind(0d0)) for double complex            *
-!*      dble(integer) is equivalent to real(integer,kind(0d0))   *
-!*      for double real                            March 2025    *
+!*   3. TIP507_config.start0 : parameter file, kstart=0, 1, 2    *
 !*                                                               *
 !*   Histories:                                                  *
-!*     Translation and rotation of molecules                     *
-!*      5-point hydrogen and oxygen pairs                        * 
-!*      prefactor (realteil) and pref_eps (Lennard-Jones)        *
+!*     translation and rotation simulation code.                 *
+!*     4-point Coulomb, and epslj_A,B due to tip5p.              * 
+!*      prefactor (realteil), and pref_eps (Lennard-Jones)       *
 !*      epslj_A,B for water, ep(i) for hybrid molecules.         *
+!*     real*8 in Fortran 2003 / PGF 19 (2019).                   *
 !*                                                               *
-!*     Fujitsu FX100 by Feb.2020, NEC-Aurora from July 2020.     *
+!*   Fujitsu FX100 before Feb.2020, NEC-Aurora by July 2020.     *
+!*   Linux by Apr 2025.                                          *
 !*                                                               *
 !************************************* First code: 02/26/2005 ****
 !*                                                               *
-!*  1. >>> run's name is given by param_tip5p_D07a.h             *
+!*  1 >>> run's name is given by param_tip5p_D07a.h              *
 !*                                                               *
-!*  2. >>> Run parameters are given in TIP07_config.start0, or 1 *
+!*  2 >>> Run parameters are given in TIP07_config.start0, or 1  *
 !*       which is read by /read_conf/.                           *
 !*                                                               *
-!*  3. >>> Start, Restart and continue runs.                     *
+!*  3 >>> Start, Restart and continue runs.                      *
 !*                                                               *
-!*   Physical units:                                             *
+!*   units:                                                      *
 !*    t_unit= 0.0100d-12          ! 0.01 ps                      *
 !*    a_unit= 1.0000d-08          ! 1 Ang                        *
 !*    w_unit= 1.6605d-24*18.      ! H2O is the unit              *
 !*    e_unit= 4.8033d-10          ! esu                          *
 !*                                                               *
-!*     ^  dv    t^2 e^2   qq'   12 t^2 eps   r0       1 r0       *
-!*     m ---- = -------- ---- + ------ --- [(--)^12 - -(--)^6]   * 
-!*        dt     ma^3    r^2     ma^2   r    r        2 r        *
+!*     ^  dv    t^2 e^2   qq'   12 t^2 eps   r0        r0        *
+!*     m ---- = -------- ---- + ------ --- [(--)^12 - (--)^6]    * 
+!*        dt     ma^3    r^2     ma^2   r    r         r         *
 !*                                                               *
 !*   Subroutines:                                                *
-!*                                                               *
 !*     run_md - read_conf                                        *
 !*              init - initial loading, use read(17), read(30)   *
 !*              read(12)                                         *
 !*              interpol_charge_assign_function,                 *
 !*                calculate_meshift, etc.                        *
-!*              moldyn - pre-steps  kstart=0,2, or kstart=1,3    *
+!*              moldyn - pre-steps  kstart=0,2, or kstart=1      *
 !*                     - long 1000 loop                          *
-!*                      -> realteil - forces_5                   *
-!*                      -> p3m_perform                           *
-!*                      -> write files for write(13), write(23)  *
+!*                       - realteil - forces_5                   *
+!*                       - p3m_perform                           *
+!*                     - make files for write(13),write(23)      *
 !*              write(12) for preparation of the next restart    *
 !*                                                               *
 !*   Post-processing programs:                                   *
-!*                                                               *
 !*   * @lplotip507.f03 - the final history of energies           *
 !*   * @dipol_seqtip507.f03 - dipole Ex field                    *
 !*   * @iceplotip507.f03  -   3D scatter plots for x,y,z         *
 !*   * @wat_radtip507.f03 - pair distribution functions          *
 !*                                                               *
 !*****************************************************************
-!  Only parallel Fortran 2003: 
-!  >> gfortran
-!  $ mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
-!  >> PGFortran
-!  $ mpif90 -mcmodel=medium -fast -tp=px -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
-!  $ mpiexec -n 6 a.out &  (proc>=6 or more
+!    We define tequil in /read_conf/ by default. In some case,
+!  it may be tequil=t8 at L:350, or by the statememt tequil=0 
+!  at L.650. It must be momorized at this value !!
 !
-!  FT11 is opened at L.85 and closed at L.690. Afterwards it is
-!  by open/close statements when write's action is called.
+!  Only parallel Fortran 2003
+! % mpif90 -mcmodel=medium -fpic -O2 -o aax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
 !
       program es3d_tip5
 !
@@ -102,17 +84,16 @@
       include     'param_tip5p_D07a.h' 
       include     'mpif.h' 
 !
-      integer(C_INT) size,rank,ierror,ipar,if_lj,io_pe,cl_first
+      integer(C_INT) size,rank,ierror,ipar,io_pe,cl_first
       real(C_DOUBLE) wall_time1,wall_time2,wall_time7,wall_time0
       common/sub_proc/ io_pe
 !
 !
-      if_lj = 1
       call mpi_init (ierror)
       call mpi_comm_rank (mpi_comm_world,rank,ierror)
       call mpi_comm_size (mpi_comm_world,size,ierror)
 !
-      ipar = 1 + rank               !! pe #= 1,2,3...
+      ipar = 1 + rank           !! ipar pe # = 1,2,3...
 !
       io_pe = 0
       if(ipar.eq.1) io_pe = 1 
@@ -121,8 +102,7 @@
       if(io_pe.eq.1) then
         open (unit=11,file=praefixc//'.11'//suffix2,form='formatted')
 !
-        write(11,*) "rank=",rank    ! FT11 is used
-        write(11,*) "size=",size
+        write(11,*) "rank, size=",rank,size    ! FT11 is used
 !
 !     Not closing FT11 up to L.700
       end if
@@ -132,7 +112,7 @@
 !
 ! ----------------------------------------------------------
       wall_time0= wall_time1
-      call run_md (wall_time0,ipar,size,if_lj)
+      call run_md (wall_time0,ipar,size)
 ! ----------------------------------------------------------
 !
       cl_first= 2
@@ -158,13 +138,13 @@
 !
 !
 !------------------------------------------------------
-      subroutine run_md (wall_time0,ipar,size,if_lj)
+      subroutine run_md (wall_time0,ipar,size)
 !------------------------------------------------------
       use, intrinsic :: iso_c_binding 
       implicit  none
       include  'param_tip5p_D07a.h'
 !
-      integer(C_INT) ipar,size,if_lj,nq,np
+      integer(C_INT) ipar,size,nq,np
       real(C_DOUBLE) wall_time0
 !
       real(C_DOUBLE),dimension(npq5) :: xa,ya,za,ch,am,ep,qch,ag 
@@ -273,7 +253,6 @@
 !
 !**************************************************************
 !*  rbmax: maximum bond length for /sprmul/.
-!
 !     rbmax= 1.5
 !
 !  All pe's are executed
@@ -313,17 +292,17 @@
 !
 !     nq= nq0  !<-- param
 !     np= np0  !<-- param
-!    ---------------------------------------------------
+!    -----------------------------------------------------
       call init (xa,ya,za,ch,am,ep,qch,ag,vx,vy,vz,amm, &
                  e0,e1,e2,e3,A11,A12,A13,A21,A22,A23,   &
                  A31,A32,A33,nq,np)
-!    ---------------------------------------------------
+!    -----------------------------------------------------
 !** 
+!* A new run starts
       if(kstart.eq.0) then
-!* A new run: kstart=0
 !
         if(io_pe.eq.1) then
-          write(11,*) "# water #"
+          write(11,*) "# Water #"
           write(11,'(10f8.4)') (ch(i),i=1,30)
 !
           if(np.gt.0) then
@@ -332,16 +311,14 @@
           end if
         end if
 !
-!* Restart data of kstart >= 1
-!    these overwrite kstart=0 data, as continuation by FT12...
+!* Restart data of kstart= 1 or greater
 !
       else if(kstart.ge.1) then
-!     +++++++++++++++++++++++++
 !
         open (unit=12,file=praefixi//'.12'//suffix1,        & ! read(12)
                              status='old',form='unformatted') !  old
 
-        read(12) it,is,nq,np,if_lj            !<- np=0
+        read(12) it,is,nq,np               !<- np=0
         read(12) xa,ya,za,vx,vy,vz,ch,am,ep,qch,ag 
         read(12) xg,yg,zg,amm,xr,yr,zr
         read(12) Lgx,Lgy,Lgz,e0,e1,e2,e3,Im
@@ -356,20 +333,18 @@
         read(12) xmax,ymax,zmax,zcp,zcn
         close(12)
 !
-!
-! % mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
+!     ----------------
 !     parameter  (kstart=2,suffix2='0b', & ! 120b, kstart=2
 !                          suffix1='0a', & ! TIP501__0
 !                          suffix0='0')    ! 
-!     parameter  (kstart=2,suffix2='0c', & ! 120c, kstart=2
-!                          suffix1='0b', & ! TIP501__0
-!                          suffix0='1')    ! 
-! /home2, /lv01 
-!     ----------------
-        suffix3= '0z'  ! '0c'
+!     parameter  (kstart=2,suffix2='0l', & ! 120c, kstart=2
+!                          suffix1='0k', & ! TIP501__0
+!                          suffix0='0')    ! 
 !
+        suffix3= '0z'  !<- it is defined if suffix3= suffix2,
+!                          and tequil must be this value.then.
         if(suffix2.eq.suffix3) then
-          tequil= t8   ! only the time when suffix2='0c'
+          tequil= t8   ! only tequil when suffix2='0z'
         end if
 !     ----------------
 !
@@ -378,33 +353,15 @@
           write(11,'(" Restart data are loaded from FT12.....",/, &
                  "   FT12x:",a34,/,                               &
                  "   restart time is t8=",f15.2,/,                &
-                 " kstart=1... restart(warm) but with t=0.",/,    &
-                 " kstart=2,...from the second times",/)') &
-                                     praefixi//'.12'//suffix1,t8
-!
-        if(io_pe.eq.1) then
-          write(11,*) "file= ",praefixi//".12"//suffix1
-          write(11,'(" Restart data are loaded from FT12.....",/, &
-                 "   FT12x:",a34,/,                               &
-                 "   restart time is t8=",f15.2,/,                &
-                 " kstart=1... restart(warm) but with t=0.",/,    &
-                 " kstart=2,...from the second times",/)') &
-                                     praefixi//'.12'//suffix1,t8
-!
-        if(io_pe.eq.1) then
-          write(11,*) "file= ",praefixi//".12"//suffix1
-          write(11,'(" Restart data are loaded from FT12.....",/, &
-                 "   FT12x:",a34,/,                               &
-                 "   restart time is t8=",f15.2,/,                &
-                 " kstart=1... restart(warm) but with t=0.",/,    &
-                 " kstart=2,...from the second times",/)') &
+                 " kstart=1... Restart(warm) with t=0.",/, &
+                 " kstart=2,...from the second time",/)') &
                                      praefixi//'.12'//suffix1,t8
           write(11,*) " t8,it,is...=",t8,it,is,nq,np
         end if
       end if
 !
 !  Equation of motion:
-!  from L.280, call to /init/ of L.2830
+!  "call init" of L.280 to subroutine at L.2920
 !                                       ^erg   
 !*     ^  dv    t^2 e^2   qq'   48 t^2 eps   r0       1  r0   
 !*     m ---- = -------- ---- + ------ --- [(--)^12 - --(--)^6]
@@ -418,7 +375,7 @@
       dmesh  = float(mesh)   ! <--- param_wat
 !
 !  -------------------------------
-!  This order and definition are essential !!
+!  This order of definitions is essential !!
 !
       call interpol_charge_assign_function (intcaf)
       call calculate_meshift (meshift)
@@ -445,17 +402,17 @@
                    Lgx,Lgy,Lgz,e0,e1,e2,e3,Im,          &
                    A11,A12,A13,A21,A22,A23,A31,A32,A33, &
                    fec,fek,wall_time0,ipar,size,        &
-                   if_lj,nq,np)
+                   nq,np)
 !*-----------------------------------------------------------
 !************************************
 !*   Step 3 : Restart data          *
 !************************************
       if(io_pe.eq.1) then
 !
-        open (unit=12,file=praefixe//'.12'//suffix2,        &
+        open (unit=12,file=praefixe//'.12'//suffix2,        & !  suffix2
                          status='replace',form='unformatted')
 !
-        write(12) it,is,nq,np,if_lj           !<- np=0
+        write(12) it,is,nq,np               !<- np=0
         write(12) xa,ya,za,vx,vy,vz,ch,am,ep,qch,ag
         write(12) xg,yg,zg,amm,xr,yr,zr
         write(12) Lgx,Lgy,Lgz,e0,e1,e2,e3,Im
@@ -497,7 +454,7 @@
                          Lgx,Lgy,Lgz,e0,e1,e2,e3,Im,            &
                          A11,A12,A13,A21,A22,A23,A31,A32,A33,   &
                          fec,fek,wall_time0,ipar,size,          &
-                         if_lj,nq,np)
+                         nq,np)
 !------------------------------------------------------------------
 !*  double precision.
       use, intrinsic :: iso_c_binding 
@@ -506,12 +463,11 @@
       include  'param_tip5p_D07a.h'
       include  'mpif.h' 
 !
-      integer(C_INT) ipar,size,if_lj,nq,np,ncorr,ierr
+      integer(C_INT) ipar,size,nq,np,ncorr,ierr
       real(C_DOUBLE) wall_t01,wall_t02,wall_t03,wall_t04,wipe
       real(C_DOUBLE) wall_time0,wall_time1,wall_time7
 !
-      real(C_DOUBLE),dimension(npq5) :: xa,ya,za,ch,am,ep,qch,ag, &
-                                        chsav,epsav            ! 5-water and ions
+      real(C_DOUBLE),dimension(npq5) :: xa,ya,za,ch,am,ep,qch,ag
       real(C_DOUBLE),dimension(npq5,3) :: fec,fek
       real(C_DOUBLE),dimension(npq0) :: vx,vy,vz,amm           ! water and ions
 !
@@ -589,6 +545,14 @@
       common/sub_proc/ io_pe
       common/parm1/ it,is
 !
+      integer(C_INT) :: nnd=21  ! t8=30,0000, 650,000, 1,000,000
+      logical :: if_nnd= .true.
+      character(len=2) suffix3(40)/ &
+                    '01','02','03','04','05','06','07','08','09','10', &
+                    '11','12','13','14','15','16','17','18','19','20', &
+                    '21','22','23','24','25','26','27','28','29','30', &
+                    '31','32','33','34','35','36','37','38','39','40'/
+!
       real(C_DOUBLE) phi,tht,dtwr,dtwr2,dthist,tequil,cptot !! <-- real8
       common/parm4/  phi,tht,dtwr,dtwr2,dthist,tequil
       common/parm9/  cptot
@@ -613,7 +577,7 @@
       common/headr2/  t8
       common/headr3/  xleng
 !
-      real(C_DOUBLE)  ekin0,ekin1,eimg2,s0,s1,si,sr,omg_bar
+      real(C_DOUBLE)  ekin0,ekin1,eimg2,s0,s1,si,sr
       real(C_float)   ranff
 !
       real(C_float),dimension(npq5) :: x4,y4,z4,ch4,am4,qch4 
@@ -621,11 +585,10 @@
       integer(C_INT) npq,cl_first 
       integer(C_INT) i_barrier,root
 !
-      real(C_DOUBLE) t_wipe
+      real(C_DOUBLE) t_wipe,ekm
       logical :: first_23=.true.,first_p3m=.true.,  &
                  first_06=.true.,if_tequil=.true.,  &
-                 if_kstart=.true.,if_wipe=.true.,   &
-                 if_kstart1=.true.
+                 if_kstart=.true.
 !
 !     if(size.gt.100) then
 !       if(io_pe.eq.1) then
@@ -643,9 +606,9 @@
 !     xa(i)= ...
 !     end do 
 !   +++++++++ for this run ++++++++++++++++++
-!!    if(kstart.eq.1 .or. kstart.eq.3) then
-!!      np= 0 
-!!    end if
+!     if(kstart.eq.1) then
+!       np= 0   !! methane hydrate
+!     end if
 !   +++++++++++++++++++++++++++++++++++++++++
 !
 !        Start            Restart from t=0
@@ -659,7 +622,7 @@
 !     iwrt1= iwrta(t8,dtwr)
         iwa=  -1
         iwb=  -1
-        iwc=  0  ! not (-1) as the first call
+        iwc=  0  ! iwc=0 as the first call
 !
         if(kstart.eq.0) then
           do j= 1,nq1
@@ -674,9 +637,9 @@
           fec(i,3)= 0
           end do
 !
-        else if(kstart.eq.1) then  !! restart with t=0
+        else if(kstart.eq.1) then  !! Restart with t=0
 !
-          tequil= 0.d0
+          tequil= 0.d0 
 !
           if(io_pe.eq.1) then
             write(11,*) " Present time t8=",t8,"  is=",is
@@ -684,7 +647,7 @@
         end if
       end if
 !
-!* table creation at restart
+!* Table creation at restart
 !-------------------------------------------------------
       if(io_pe.eq.1) then
         open (unit=13,file=praefixc//'.13'//suffix2,     &
@@ -746,11 +709,19 @@
 !     do i= nq+1,nq+np
 !     ch(i) = 0.d0  ! no charge
 !     end do
+      if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,            &
+              status='unknown',position='append',form='formatted')
+!
+        write(11,*)
+        write(11,*) '## This cptot is defined as ',cptot,' min. ##'
+        write(11,*)
+        close(11)
+      end if
 !
 !  dt = 0.025d0 in read_conf 
 !  the first time is t8= 0. (it= 1)
 !
-!  Start 1000, and goto 1000
  1000 dth= 0.5d0*dt
 !
       t8= t8 +dt
@@ -760,15 +731,7 @@
       iwrt2= iwrtb(t8,dtwr2)  !  different iwrt must be used
       iwrth= iwrtc(t8,dthist) ! for different purposes
 !**
-      if(io_pe.eq.1) then
-        close(11)   !<- Always close(11) except for diagnosis 
-      end if
-!**
-!  [2]
-!  ++++++++++++++++++++++++++++++++++++++++++
-!    exc> 0 of t>= tequil at restart, L.358
-!  ++++++++++++++++++++++++++++++++++++++++++
-!
+!   tequil is defined by /read_conf/: read (08,'(a40,f20.0)') text1,tequil   
 !
       if(t8.ge.tequil) then
         if_tequil= .false.
@@ -786,121 +749,21 @@
       end if
 !
 !
-!  *********************
-!   exc> 0 if t> tequil
-!  *********************
-!
       if(t8.lt.tequil) then
         exc = 0.d0
       else
-        exc = econv *edc *sin(2.d0*pi*(t8 -tequil)/tau_wave)  &
-                             *(1.d0 -exp(-(t8 -tequil)/200.d0)) 
+        exc = econv*edc *sin(2.d0*pi*(t8 -tequil)/tau_wave)  &
+                            *(1.d0 -exp(-(t8 -tequil)/200.d0)) 
       end if
 !
-      if(it.eq.1 .and. io_pe.eq.1) then
-        open (unit=11,file=praefixc//'.11'//suffix2,             & 
-              status='unknown',position='append',form='formatted')
-!
-        write(11,371) econv,edc,econv*edc
-        write(11,*)
-  371   format(' % econv,edc,econv*edc=',1p3d10.2)
-        close(11)
-      end if
 !
 !     t_init=     1000.d0   !<- at kstart=0, in param
 !     t_wipe_sta= 1700.d0   !<- salt wipe, in parameter 
 !     t_wipe_end= 4700.d0 
 !     t_wipe= t_wipe_end -t_wipe_sta  
 !*
-      if(kstart.eq.0) then
-!
-        if(t8.le.t_init) then 
-!       +++++++++++++++++++++  L.600: if i>nq
-          if(it.eq.1) then
-            do i= nq+1,nq+np  !<- empty 
-            chsav(i)= ch(i) 
-            epsav(i)= ep(i)
-            end do
-!
-            if(io_pe.eq.1 .and. np.gt.0) then
-            open (unit=11,file=praefixc//'.11'//suffix2,             & 
-                  status='unknown',position='append',form='formatted')
-            write(11,*) "# t_init is executed"
-            close(11)
-            end if 
-          end if
-!
-          do i= nq+1,nq+np 
-          ch(i)= min(t8/t_init,1.d0)*chsav(i) !<- increase
-!         ep(i)= min(t8/t_init,1.d0)*epsav(i) 
-          end do
-        end if
-      end if
-!*
-!  Ice 1c: ice 273 K is eps= 91.5 (Eyring et al., PNAS 1966)
-      if(temperat.lt.273.d0) go to 230
-!                 +++++++++ 
-!
-! **************************
-!  Pseudo salt is wiped out: 
-! **************************
-!   t_wipe_sta=1700. and t_wipe_end=4700 
-!
-      t_wipe= t_wipe_end -t_wipe_sta  
-!
-      if(kstart.eq.0 .or. kstart.eq.2) then
-!*
-        if(t8.gt.t_wipe_sta) then 
-          if(if_wipe) then
-            if_wipe= .false.
-!
-!           +++++++++++++++++++++  L.600: if i>nq
-            do i= nq+1,nq+np  !<- when t_wipe_sta is started
-            chsav(i)= ch(i) 
-            epsav(i)= ep(i)
-            end do
-!
-            if(io_pe.eq.1 .and. np.gt.0) then
-            open (unit=11,file=praefixc//'.11'//suffix2,             & 
-                  status='unknown',position='append',form='formatted')
-            write(11,*) "# t_wipe_sta is executed"
-            close(11)
-            end if 
-          end if
-!
-          do i= nq+1,nq+np 
-          ch(i)= max(1.d0 -(t8-t_wipe_sta)/t_wipe,0.d0)*chsav(i) !<- decease 
-          ep(i)= max(1.d0 -(t8-t_wipe_sta)/t_wipe,0.d0)*epsav(i) 
-          end do
-        end if
-!
-!  Pseudo salt has been removed
-!  Real salt can be added
-        if(t8.gt.t_wipe_end) then 
-!
-!         +++++++++++++++++++++  L.600: if i>nq
-          do i= nq+1,nq+np  !<- to empty 
-          vx(i)= 0
-          vy(i)= 0
-          vz(i)= 0
-          end do
-!
-          if(io_pe.eq.1 .and. np.gt.0) then
-          if_kstart1= .false.
-!
-          open (unit=11,file=praefixc//'.11'//suffix2,             & 
-                status='unknown',position='append',form='formatted')
-          write(11,*) "# t_wipe_end is ended"
-          close(11)
-          end if 
-        end if  
-      end if
-!
-  230 continue
-!
-!   kstart=1, restart with t=0 and exc >0, Read L.600.
-!   kstart=3, general continuation
-      if(kstart.eq.1 .or. kstart.eq.3) then 
+!   kstart=1, Restart with t=0 and exc >0
+      if(kstart.eq.1) then 
 !
         if(if_kstart .and. t8.gt.0.d0) then 
           if_kstart= .false.
@@ -908,6 +771,7 @@
           if(io_pe.eq.1) then
           open (unit=11,file=praefixc//'.11'//suffix2,             &
                 status='unknown',position='append',form='formatted')
+!
           write(11,*) "# Restart with t >= 0 and exc > 0 !"
           close(11)
           end if
@@ -917,8 +781,9 @@
 !***********************************************************
 !*  Main Loop                                              *
 !***********************************************************
-!  Separation of R and s_k {j=1; i=1,2,3}
-!   (xr,yr,zr) = A*(xr,yr,zr)
+!  Separation of R{j} and r_k{i=1,2,3}
+!   (xa,ya,za) = (X,Y,Z) + Sum_i A*(xr,yr,zr)
+!
 !  *prefactor* is added in /realteil/ (L.1700, 1770)
 !     and in subroutine /p3m_perform/ (L.2100)
 !
@@ -935,7 +800,6 @@
         yg1= (16*ya(i) +ya(i+1) +ya(i+2))/18.d0
         zg1= (16*za(i) +za(i+1) +za(i+2))/18.d0
 !
-!  A_ij is read from /init/ at the first step.
         xr1= xa(i) -xg1
         yr1= ya(i) -yg1
         zr1= za(i) -zg1
@@ -981,15 +845,15 @@
 !  The initial forces are finite at t8= 0 
       if(kstart.eq.0 .and. it.eq.1) then
 !
-        call realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,if_LJ,nq,np)
+        call realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,nq,np)
 !
         npq= nq +np
         call p3m_perform (xa,ya,za,ch,fek,npq,first_p3m)
 !                                           !<- qch(i)=(O)(H)(H) M M
         do i= 1,nq+np
-        fec(i,1)= fec(i,1) +fek(i,1) +qch(i)*exc
-        fec(i,2)= fec(i,2) +fek(i,2)
-        fec(i,3)= fec(i,3) +fek(i,3)
+        fec(i,1)= (fec(i,1) +fek(i,1))/epsilon +qch(i)*exc 
+        fec(i,2)= (fec(i,2) +fek(i,2))/epsilon
+        fec(i,3)= (fec(i,3) +fek(i,3))/epsilon
         end do
       end if
 !
@@ -1009,12 +873,12 @@
       j= j +1       ! for j
 !
       dtm= dt/amm(j) 
-      vx(j)= vx(j) + &
-                   (fec(i,1)+fec(i+1,1)+fec(i+2,1)+fec(i+3,1)+fec(i+4,1))*dtm
-      vy(j)= vy(j) + & 
-                   (fec(i,2)+fec(i+1,2)+fec(i+2,2)+fec(i+3,2)+fec(i+4,2))*dtm
-      vz(j)= vz(j) + & 
-                   (fec(i,3)+fec(i+1,3)+fec(i+2,3)+fec(i+3,3)+fec(i+4,3))*dtm
+      vx(j)= vx(j) + (fec(i,1)+fec(i+1,1)+fec(i+2,1)+fec(i+3,1)    &
+                                                    +fec(i+4,1))*dtm
+      vy(j)= vy(j) + (fec(i,2)+fec(i+1,2)+fec(i+2,2)+fec(i+3,2)    &
+                                                    +fec(i+4,2))*dtm 
+      vz(j)= vz(j) + (fec(i,3)+fec(i+1,3)+fec(i+2,3)+fec(i+3,3)    &
+                                                    +fec(i+4,3))*dtm 
 !
       xg1= (16*xa(i) +xa(i+1) +xa(i+2))/18.d0  ! --> x(n)
       yg1= (16*ya(i) +ya(i+1) +ya(i+2))/18.d0
@@ -1025,12 +889,7 @@
       zg(j)= zg1 +dt*vz(j)
 !
 !  Rotation:
-!  (1) Prediction on a half time steps by rr1,...,rr5
-!     Torqx1 = (yr1*fec(i,  3) -zr1*fec(i,  2)   &
-!              +yr2*fec(i+1,3) -zr2*fec(i+1,2)   &
-!              +yr3*fec(i+2,3) -zr3*fec(i+2,2)   &
-!              +yr4*fec(i+3,3) -zr4*fec(i+3,2)   &
-!              +yr5*fec(i+4,3) -zr5*fec(i+4,2))
+!  (1) Prediction on a half time steps
 !
       xr1= xa(i) -xg1 
       yr1= ya(i) -yg1
@@ -1053,50 +912,46 @@
       zr5= za(i+4) -zg1
 !
       Torqx1 = & 
-               (yr1*fec(i,  3) -zr1*fec(i,  2)   & ! O
-               +yr2*fec(i+1,3) -zr2*fec(i+1,2)   & ! H1
-               +yr3*fec(i+2,3) -zr3*fec(i+2,2)   & ! H2
-               +yr4*fec(i+3,3) -zr4*fec(i+3,2)   & ! L1
-               +yr5*fec(i+4,3) -zr5*fec(i+4,2))    ! L2
+               (yr1*fec(i,  3) -zr1*fec(i,  2)   &
+               +yr2*fec(i+1,3) -zr2*fec(i+1,2)   &
+               +yr3*fec(i+2,3) -zr3*fec(i+2,2)   &
+               +yr4*fec(i+3,3) -zr4*fec(i+3,2)   &
+               +yr5*fec(i+4,3) -zr5*fec(i+4,2))
 !
       Torqy1 = & 
-               (zr1*fec(i,  1) -xr1*fec(i,  3)   & ! O
-               +zr2*fec(i+1,1) -xr2*fec(i+1,3)   & ! H1
-               +zr3*fec(i+2,1) -xr3*fec(i+2,3)   & ! H2
-               +zr4*fec(i+3,1) -xr4*fec(i+3,3)   & ! L1
-               +zr5*fec(i+4,1) -xr5*fec(i+4,3))    ! L2
+               (zr1*fec(i,  1) -xr1*fec(i,  3)   &
+               +zr2*fec(i+1,1) -xr2*fec(i+1,3)   &
+               +zr3*fec(i+2,1) -xr3*fec(i+2,3)   &
+               +zr4*fec(i+3,1) -xr4*fec(i+3,3)   &
+               +zr5*fec(i+4,1) -xr5*fec(i+4,3))
 !
       Torqz1 = & 
-               (xr1*fec(i,  2) -yr1*fec(i,  1)   & ! O
-               +xr2*fec(i+1,2) -yr2*fec(i+1,1)   & ! H1
-               +xr3*fec(i+2,2) -yr3*fec(i+2,1)   & ! H2
-               +xr4*fec(i+3,2) -yr4*fec(i+3,1)   & ! L1
-               +xr5*fec(i+4,2) -yr5*fec(i+4,1))    ! L2
+               (xr1*fec(i,  2) -yr1*fec(i,  1)   &
+               +xr2*fec(i+1,2) -yr2*fec(i+1,1)   &
+               +xr3*fec(i+2,2) -yr3*fec(i+2,1)   &
+               +xr4*fec(i+3,2) -yr4*fec(i+3,1)   &
+               +xr5*fec(i+4,2) -yr5*fec(i+4,1))
 !
 !  Trial move on a half time steps 
       LLgx1= Lgx(j) +Torqx1*dth  ! Lgx(n-1/2),Torqx(n) -> LLgx(n)
       LLgy1= Lgy(j) +Torqy1*dth
       LLgz1= Lgz(j) +Torqz1*dth
 !
-!  omg_x(n) = L_P/Im(j,1) = (A_ij*L_R)/Im(j,1)
-!  omg_y(n) = L_P/Im(j,2) = (A_ij*L_R)/Im(j,2)
-!  omg_z(n) = L_P/Im(j,3) = (A_ij*L_R)/Im(j,3)
-!  
+!  omg_x(n) = L_P/Im(j,1-3) = A*L_R/Im(j,1-3) 
       omg_x1= (A11(j)*LLgx1 +A12(j)*LLgy1 +A13(j)*LLgz1)/Im(j,1)
       omg_y1= (A21(j)*LLgx1 +A22(j)*LLgy1 +A23(j)*LLgz1)/Im(j,2)
       omg_z1= (A31(j)*LLgx1 +A32(j)*LLgy1 +A33(j)*LLgz1)/Im(j,3)
 !
-!  Prediction of e0(n+1/2): q(n+1/2)= q(n) +dth*Q(n)*omg(n)
+!  prediction of e0(n+1/2): q(n+1/2)= q(n) +dth*Q(n)*omg(n)
 !  Rotation matrix A_ij^(n+1/2) by e0(j),e1(j),...
-!   in each pe01, mixes omg_x1, omg_y1, omg_z1
       pe01= e0(j) +(dth/2.d0)*(  &
-                 -e1(j)*omg_x1 -e2(j)*omg_y1 -e3(j)*omg_z1 )
+                            -e1(j)*omg_x1 -e2(j)*omg_y1 -e3(j)*omg_z1 )
       pe11= e1(j) +(dth/2.d0)*(  &
-                  e0(j)*omg_x1 -e3(j)*omg_y1 +e2(j)*omg_z1 )
+                             e0(j)*omg_x1 -e3(j)*omg_y1 +e2(j)*omg_z1 )
       pe21= e2(j) +(dth/2.d0)*(  &
-                  e3(j)*omg_x1 +e0(j)*omg_y1 -e1(j)*omg_z1 )
+                             e3(j)*omg_x1 +e0(j)*omg_y1 -e1(j)*omg_z1 )
       pe31= e3(j) +(dth/2.d0)*(  &
-                 -e2(j)*omg_x1 +e1(j)*omg_y1 +e0(j)*omg_z1 )
+                            -e2(j)*omg_x1 +e1(j)*omg_y1 +e0(j)*omg_z1 )
 !
       A11(j)= pe01**2 +pe11**2 -pe21**2 -pe31**2 
       A12(j)= 2*(pe11*pe21 +pe01*pe31) 
@@ -1124,14 +979,10 @@
       omg_z(j)= omg_z1
 !
 !  Then, e0(n) -> e0(n+1)
-      e0(j)= e0(j) +(dt/2.d0)*(  &
-                -pe11*omg_x1 -pe21*omg_y1 -pe31*omg_z1 )
-      e1(j)= e1(j) +(dt/2.d0)*(  &  
-                 pe01*omg_x1 -pe31*omg_y1 +pe21*omg_z1 )
-      e2(j)= e2(j) +(dt/2.d0)*(  &
-                 pe31*omg_x1 +pe01*omg_y1 -pe11*omg_z1 )
-      e3(j)= e3(j) +(dt/2.d0)*(  &
-                -pe21*omg_x1 +pe11*omg_y1 +pe01*omg_z1 )
+      e0(j)= e0(j) +(dt/2.d0)*( -pe11*omg_x1 -pe21*omg_y1 -pe31*omg_z1 )
+      e1(j)= e1(j) +(dt/2.d0)*(  pe01*omg_x1 -pe31*omg_y1 +pe21*omg_z1 )
+      e2(j)= e2(j) +(dt/2.d0)*(  pe31*omg_x1 +pe01*omg_y1 -pe11*omg_z1 )
+      e3(j)= e3(j) +(dt/2.d0)*( -pe21*omg_x1 +pe11*omg_y1 +pe01*omg_z1 )
 !
       A11(j)= e0(j)**2 +e1(j)**2 -e2(j)**2 -e3(j)**2 
       A12(j)= 2*(e1(j)*e2(j) +e0(j)*e3(j)) 
@@ -1164,7 +1015,7 @@
 !       xr(i)= A11(j)*xr1 +A12(j)*yr1 +A13(j)*zr1
 !       xa(i)= xg(j) +A11(j)*xr(i) +A21(j)*yr(i) +A31(j)*zr(i)
 ! 
-!  Outside the triangle plane by virtual sites
+!  Outside the triangle plane
       xxa= xa(i+2) -xa(i+1)
       yya= ya(i+2) -ya(i+1)
       zza= za(i+2) -za(i+1)
@@ -1198,9 +1049,7 @@
 !* End of the long i-loop
 !
 !  i >= nq+1 (co/counter ions) are counted.
-!     +++++++++++++++++++++  L.600: if i>nq
       j= nq1
-!
       do i= nq+1,nq+np
       j= j +1
 !
@@ -1221,21 +1070,21 @@
         call clocks (wall_t02,size,cl_first)
 !
 !  In /realteil/, all nq and np
-      call realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,if_LJ,nq,np)
-!
-        call clocks (wall_t03,size,cl_first)
+      call realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,nq,np)
 !
       npq= nq +np
       call p3m_perform (xa,ya,za,ch,fek,npq,first_p3m)
+!
+        call clocks (wall_t03,size,cl_first)
 !
 !
 !  ice for 230 K, or water above 273 K
 !  1cx666_ must be changed in /init/.
 !                                    !<- qch(i)=(O)(H)(H) M M
       do i= 1,nq+np
-      fec(i,1)= fec(i,1) +fek(i,1) +qch(i)*exc
-      fec(i,2)= fec(i,2) +fek(i,2)
-      fec(i,3)= fec(i,3) +fek(i,3)
+      fec(i,1)= (fec(i,1) +fek(i,1))/epsilon +qch(i)*exc 
+      fec(i,2)= (fec(i,2) +fek(i,2))/epsilon
+      fec(i,3)= (fec(i,3) +fek(i,3))/epsilon
       end do
 !
 !* Correction
@@ -1256,26 +1105,19 @@
         call clocks (wall_t04,size,cl_first)
 !
 !* End of the loop
-!*  Do not fold back positions: (-l/2, l/2). 
-!   +++++++++++++++++++++  L.600: if i> nq, goto 1000
+!*  do not fold back positions: (-l/2, l/2). 
 !
 !------------------------------
 !*  Diagnosis section.
 !------------------------------
 ! 1. Energy.
 !
-!  To keep open unit=11
-!     if(io_pe.eq.1) then
-!       close(11)
-!       open (unit=11,file=praefixc//'.11'//suffix2,             & 
-!             status='unknown',position='append',form='formatted')
-!     end if
-!
 ! --------------------------------------- on major nodes --------------
       if(io_pe.eq.1 .and. iwrt1.eq.0) then
 !
         open (unit=11,file=praefixc//'.11'//suffix2,             & 
               status='unknown',position='append',form='formatted')
+!       ----------------------------------------------------------
 !**
         is= is +1
 !       if(is.ge.40000) then
@@ -1285,12 +1127,12 @@
         if(is.eq.1) then
           write(11,'( &
            " ******************************************************",/, &
-           "   equilibration phase ends at t(10fs) = ",f8.1,/,         &
-           "     applied field: econv*edc = ",1pe11.3,/,              &
+           "   Equilibration phase ends at t(10fs) = ",f8.1,/,         &
+           "     applied field: econv*edc = ",1p2d11.3,/,              &
            "                 period (10fs) = ",0pf7.1,/,               &
-           "     thermal velocity of water (a/10fs)= ",1pe11.3,/,      &
+           "     thermal velocity of water (a/10fs)= ",1pd11.3,/,      &
            " ******************************************************",/)') &
-                                         tequil,econv*edc,tau_wave,vth0
+                                      tequil,edc,econv*edc,tau_wave,vth0
         end if
 !
         if(first_06) then
@@ -1298,15 +1140,15 @@
 !
           write(11,'(/,"  time:      e_kin.W     e_img.W     e_kin(M) ", &
                    "   e_c_r       e_lj        e_p3m       e_tot      ", &
-                   "    walltm  vm          exc        <ekin>     <eimg>", &
-                   "       cpu0        cpu1        cpu2        cpu3")') 
+                   "   walltm     vm         exc        <ekin>     <eimg>", &
+                   "          cpu0         cpu1         cpu2         ", &
+                   "cou3")') 
         end if
 !
         s0= 0
         si= 0
         sr= 0
         vm= 0
-        s1= 0
 !
         do j= 1,nq1
         s0= s0 +0.5d0*amm(j)*(vx(j)**2 +vy(j)**2 +vz(j)**2)
@@ -1319,15 +1161,17 @@
         vm= max(sqrt(vsq),vm)
         end do
 !
+        ekin0= s0
+        eimg2= si
+!
+        s1= 0
+!
         do j= nq1+1,nq1+np
         vsq= vx(j)**2 +vy(j)**2 +vz(j)**2
         s1= s1 +0.5d0*amm(j)*vsq
         end do
 !
-        ekin0= s0
-        eimg2= si
         ekin1= s1
-        omg_bar= sqrt(sr)/nq1
 !
         time(is)= t8
         vdtm(is)= vm
@@ -1338,7 +1182,7 @@
         ecr (is) = e_c_r
         elj (is) = e_lj 
         ep3m(is) = e_coulomb_p3m 
-        etot(is) = s0 +eimg2 +s1 +ecr(is)+elj(is)+ep3m(is)
+        etot(is) = s0 +si +s1 +ecr(is)+elj(is)+ep3m(is)
 !
         svx1= 0
         svx2= 0
@@ -1378,7 +1222,7 @@
         xwat(is)= sx3/nq1
 !
 !*
-        write(11,'("t=",f9.1,1p7e12.4,2x,0pf9.1,1p4d11.3,2x,4d12.3)') &
+        write(11,'("t=",f9.1,1p7e12.4,2x,5d11.3,2x,4d13.3)') &
                       time(is),ekin0,eimg(is),ekin1,         &
                       ecr(is),elj(is),ep3m(is),etot(is),     &
                       wall_time7,vm,exc,ekin0/nq1,eimg(is)/nq1, &
@@ -1386,20 +1230,69 @@
                       wall_t03-wall_t02,wall_t04-wall_t03
 !*
         close(11)
+!       --------
 !*
-!  At 273 K, the average energy of (ekin+eimg)/2 becomes 2.85d-1
+!  At 298 K, the average energy, 400 K is... 
         i_barrier= 0
-        if((ekin(is)+eimg(is))/2.d0.gt.2.85d-1) then
+        
+        if(is.eq.100) then
+          ekm= (ekin(is) +eimg(is))/nq1
+!       
+        else if(is.gt.100 .and. &
+                (ekin(is)+eimg(is))/nq1 .gt. 1.3d0*ekm) then
           i_barrier= 1
         end if
 !**
       end if
 !
-      root= 1      !  i_barrier is BCASTED from root
+      root= 1      !  i_barrier is BCASTed from root
       call MPI_BCAST (i_barrier,1,mpi_integer,root,mpi_comm_world,ierr)
       if(i_barrier.eq.1) go to 2000
 !
 ! 2. History plots.
+!---------------------------------------------------------------------
+!
+!     if(io_pe.eq.1 .and. iwrt3.eq.0) then
+      if(.false.) then
+!
+        if(if_nnd) then
+          if(t8.gt.1050000.d0) then
+            nnd= 22 -1
+          else if(t8.gt.1000000.d0) then
+            nnd= 21 -1
+          end if
+!
+          if_nnd= .false.
+        end if
+!
+        nnd= nnd +1 
+        open (unit=25,file=praefixe//'.25'//suffix3(nnd),   &
+                         status='unknown',form='unformatted')
+
+        write(25) it,is,nq,np               !<- np=0 
+        write(25) xa,ya,za,vx,vy,vz,ch,am,ep,qch,ag 
+        write(25) xg,yg,zg,amm,xr,yr,zr
+        write(25) Lgx,Lgy,Lgz,e0,e1,e2,e3,Im
+        write(25) A11,A12,A13,A21,A22,A23,A31,A32,A33
+        write(25) fec,fek
+        write(25) t8,pi,dt,rbmax,vth0         ! <-- real8
+        write(25) ekin,eimg,ekn2,etot,vxaq,vxan,vxca, &
+                  xani,vdtm,xcat,xwat,ecr,elj,ep3m
+        write(25) time
+!
+        write(25) iwa,iwb,iwc !,iwd
+        write(25) xmax,ymax,zmax,zcp,zcn
+!
+        close(25)
+!**
+        open (unit=11,file=praefixc//'.11'//suffix2,            &
+              status='unknown',position='append',form='formatted')
+!
+        write(11,*) "Periodic iwrt3 write(25) at nnd, t8=",nnd,t8 
+        close(11)
+!**
+      end if
+!
 ! 3. Particle plots.
 !---------------------------------------------------------------------
 !   Only ithe 3-points are used.
@@ -1409,14 +1302,14 @@
         open (unit=13,file=praefixc//'.13'//suffix2,               & 
               status='unknown',position='append',form='unformatted')
 !
-        do i= 1,nq+np  !<- np=0, 1,nq
+        do i= 1,nq+np  !<- 1,nq  np=0
         x4(i) = xa(i) 
         y4(i) = ya(i)
         z4(i) = za(i)
         end do
 !
         t4= t8
-        write(13) t4,x4,y4,z4  !<- np=0, 1,nq
+        write(13) t4,x4,y4,z4 
         close(13)
       end if
 !---------------------------------------------------------------------
@@ -1433,7 +1326,7 @@
                 status='unknown',position='append',form='formatted')
         end if
 !
-!  Full particlres of npq5= nq0 +np0 !
+!  Full particlres of npq5= nq0 +np0 
         do i= 1,nq,5
         x4(i) = xa(i) 
         y4(i) = ya(i)
@@ -1474,14 +1367,14 @@
 !
 !
         do i= 1,nq+np
-        x4(i)= x4(i) -anint(x4(i)/xmax)*xmax
-        y4(i)= y4(i) -anint(y4(i)/ymax)*ymax
-        z4(i)= z4(i) -anint(z4(i)/zmax)*zmax
+        x4(i)= x4(i) -DNINT(x4(i)/xmax)*xmax
+        y4(i)= y4(i) -DNINT(y4(i)/ymax)*ymax
+        z4(i)= z4(i) -DNINT(z4(i)/zmax)*zmax
         end do
 !
         write(23,'(i5,/)') nq+np
 
-        do i= 1,nq+np                          !<- np=0, 1,nq
+        do i= 1,nq+np                          !<- 1,nq  np=0
         write(23,'(a2,3f12.3)') tip(i),x4(i),y4(i),z4(i) ! H or O
         end do
 !
@@ -1509,7 +1402,7 @@
         end do
 !
         t4= t8
-        write(15) t4,x4,y4,z4     !<- np=0, 1,nq 
+        write(15) t4,x4,y4,z4 
         write(15) t4,vx4,vy4,vz4
         close(15)
 !
@@ -1519,11 +1412,11 @@
 !************************************************************
 !* Restart data.
       if(io_pe.eq.1 .and. iwrth.eq.0) then
-!                                           ++++++++++++ save
-        open (unit=12,file=praefixe//'.12'//suffix2//'-1',   &
+!
+        open (unit=12,file=praefixe//'.12'//suffix2//'-1',   & !  suffix2-1
                          status='replace',form='unformatted')
 
-        write(12) it,is,nq,np,if_lj                 !<- np=0 
+        write(12) it,is,nq,np               !<- np=0 
         write(12) xa,ya,za,vx,vy,vz,ch,am,ep,qch,ag 
         write(12) xg,yg,zg,amm,xr,yr,zr
         write(12) Lgx,Lgy,Lgz,e0,e1,e2,e3,Im
@@ -1554,7 +1447,7 @@
 !                  ++++++++++
       wall_time7 = wall_time1 - wall_time0  ! starting wall_time0
 !
-!  in every ncorr steps, there will be an exit to /2000/
+!  In every ncorr steps, there will be an exit to /go to 2000/
       if(mod(it,ncorr).eq.0) then
         if(t8.gt.tmax) go to 2000
         if((wall_time7/60.d0).gt.cptot) go to 2000  ! min.
@@ -1566,7 +1459,6 @@
         go to 2000
       end if
       go to 1000
-!     ++++++++++
 !
  2000 continue
 !**
@@ -1583,7 +1475,7 @@
 !
 !
 !----------------------------------------------------------------------
-      subroutine realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,if_LJ,nq,np) 
+      subroutine realteil (xa,ya,za,ch,ep,ag,fec,ipar,size,nq,np) 
 !----------------------------------------------------------------------
       use, intrinsic :: iso_c_binding 
       implicit none
@@ -1593,7 +1485,7 @@
 !
       real(C_DOUBLE),dimension(npq5) :: xa,ya,za,ch,ep,ag
       real(C_DOUBLE),dimension(npq5,3) :: fec,ffr
-      integer(C_INT) ipar,size,if_lj,nq,np
+      integer(C_INT) ipar,size,nq,np
 !
 !  The LJ potential for the tip4/tip5 cases !
 !
@@ -1634,7 +1526,7 @@
                      dx3,dy3,dz3,dx4,dy4,dz4,               &
                      forceV1,forceV2,forceV3,forceV4,       &
                      e_c_r1,e_c_r2,e_c_r3,e_c_r4,r,rsi,     &
-                     rlj,rlj_m,rlj0,rlj_cut,addpot1,addpot2, &
+                     rlj,rlj_m,rlj_cut,addpot1,addpot2, &
                      sn6,snt,feps3,epsav,ccel,e_lj1,        &
                      e_lj11,e_lj22,unif1(2),unif2(2)
 !
@@ -1861,7 +1753,7 @@
 !$OMP DO SCHEDULE(STATIC,1)
 !
         do ll= ipar,nq/5,size     !!only charges for water 
-        do jp= nq/5+1,nq/5+np 
+        do jp= nq/5+1,nq/5+np     ! jp > nq/5
 !       ++++++++
         j= jp -nq/5 +nq 
 !
@@ -1869,9 +1761,9 @@
         dx1= xa(i) -xa(j)
         dy1= ya(i) -ya(j)
         dz1= za(i) -za(j)
-        dx1= dx1 -anint(dx1/xmax)*xmax
-        dy1= dy1 -anint(dy1/ymax)*ymax
-        dz1= dz1 -anint(dz1/zmax)*zmax
+        dx1= dx1 -DNINT(dx1/xmax)*xmax
+        dy1= dy1 -DNINT(dy1/ymax)*ymax
+        dz1= dz1 -DNINT(dz1/zmax)*zmax
         call forces_5 (dx1,dy1,dz1,ch(i),ch(j),xmax,ymax,zmax,  &
                        alpha,e_c_r1,forceV1)
         fec(i,1) = fec(i,1) +forceV1*dx1
@@ -1882,9 +1774,9 @@
         dx2= xa(i) -xa(j)
         dy2= ya(i) -ya(j)
         dz2= za(i) -za(j)
-        dx2= dx2 -anint(dx2/xmax)*xmax
-        dy2= dy2 -anint(dy2/ymax)*ymax
-        dz2= dz2 -anint(dz2/zmax)*zmax
+        dx2= dx2 -DNINT(dx2/xmax)*xmax
+        dy2= dy2 -DNINT(dy2/ymax)*ymax
+        dz2= dz2 -DNINT(dz2/zmax)*zmax
         call forces_5 (dx2,dy2,dz2,ch(i),ch(j),xmax,ymax,zmax,  &
                        alpha,e_c_r2,forceV2)
         fec(i,1) = fec(i,1) +forceV2*dx2
@@ -1895,9 +1787,9 @@
         dx3= xa(i) -xa(j)
         dy3= ya(i) -ya(j)
         dz3= za(i) -za(j)
-        dx3= dx3 -anint(dx3/xmax)*xmax
-        dy3= dy3 -anint(dy3/ymax)*ymax
-        dz3= dz3 -anint(dz3/zmax)*zmax
+        dx3= dx3 -DNINT(dx3/xmax)*xmax
+        dy3= dy3 -DNINT(dy3/ymax)*ymax
+        dz3= dz3 -DNINT(dz3/zmax)*zmax
         call forces_5 (dx3,dy3,dz3,ch(i),ch(j),xmax,ymax,zmax,  &
                        alpha,e_c_r3,forceV3)
         fec(i,1) = fec(i,1) +forceV3*dx3
@@ -1908,9 +1800,9 @@
         dx4= xa(i) -xa(j)
         dy4= ya(i) -ya(j)
         dz4= za(i) -za(j)
-        dx4= dx4 -anint(dx4/xmax)*xmax
-        dy4= dy4 -anint(dy4/ymax)*ymax
-        dz4= dz4 -anint(dz4/zmax)*zmax
+        dx4= dx4 -DNINT(dx4/xmax)*xmax
+        dy4= dy4 -DNINT(dy4/ymax)*ymax
+        dz4= dz4 -DNINT(dz4/zmax)*zmax
         call forces_5 (dx4,dy4,dz4,ch(i),ch(j),xmax,ymax,zmax,  &
                        alpha,e_c_r4,forceV4)
         fec(i,1) = fec(i,1) +forceV4*dx4
@@ -1941,9 +1833,9 @@
       dx1= xa(i) -xa(j)
       dy1= ya(i) -ya(j)
       dz1= za(i) -za(j)
-      dx1= dx1 -anint(dx1/xmax)*xmax
-      dy1= dy1 -anint(dy1/ymax)*ymax
-      dz1= dz1 -anint(dz1/zmax)*zmax
+      dx1= dx1 -DNINT(dx1/xmax)*xmax
+      dy1= dy1 -DNINT(dy1/ymax)*ymax
+      dz1= dz1 -DNINT(dz1/zmax)*zmax
       call forces_5 (dx1,dy1,dz1,ch(i),ch(j),xmax,ymax,zmax,  &
                      alpha,e_c_r1,forceV1)
 !
@@ -1951,9 +1843,9 @@
       dx2= xa(i) -xa(j)
       dy2= ya(i) -ya(j)
       dz2= za(i) -za(j)
-      dx2= dx2 -anint(dx2/xmax)*xmax
-      dy2= dy2 -anint(dy2/ymax)*ymax
-      dz2= dz2 -anint(dz2/zmax)*zmax
+      dx2= dx2 -DNINT(dx2/xmax)*xmax
+      dy2= dy2 -DNINT(dy2/ymax)*ymax
+      dz2= dz2 -DNINT(dz2/zmax)*zmax
       call forces_5 (dx2,dy2,dz2,ch(i),ch(j),xmax,ymax,zmax,  &
                      alpha,e_c_r2,forceV2)
 !
@@ -1961,9 +1853,9 @@
       dx3= xa(i) -xa(j)
       dy3= ya(i) -ya(j)
       dz3= za(i) -za(j)
-      dx3= dx3 -anint(dx3/xmax)*xmax
-      dy3= dy3 -anint(dy3/ymax)*ymax
-      dz3= dz3 -anint(dz3/zmax)*zmax
+      dx3= dx3 -DNINT(dx3/xmax)*xmax
+      dy3= dy3 -DNINT(dy3/ymax)*ymax
+      dz3= dz3 -DNINT(dz3/zmax)*zmax
       call forces_5 (dx3,dy3,dz3,ch(i),ch(j),xmax,ymax,zmax,  &
                      alpha,e_c_r3,forceV3)
 !
@@ -1971,9 +1863,9 @@
       dx4= xa(i) -xa(j)
       dy4= ya(i) -ya(j)
       dz4= za(i) -za(j)
-      dx4= dx4 -anint(dx4/xmax)*xmax
-      dy4= dy4 -anint(dy4/ymax)*ymax
-      dz4= dz4 -anint(dz4/zmax)*zmax
+      dx4= dx4 -DNINT(dx4/xmax)*xmax
+      dy4= dy4 -DNINT(dy4/ymax)*ymax
+      dz4= dz4 -DNINT(dz4/zmax)*zmax
       call forces_5 (dx4,dy4,dz4,ch(i),ch(j),xmax,ymax,zmax,  &
                      alpha,e_c_r4,forceV4)
 !
@@ -1993,9 +1885,9 @@
         dx1= xa(i) -xa(j)
         dy1= ya(i) -ya(j)
         dz1= za(i) -za(j)
-        dx1= dx1 -anint(dx1/xmax)*xmax
-        dy1= dy1 -anint(dy1/ymax)*ymax
-        dz1= dz1 -anint(dz1/zmax)*zmax
+        dx1= dx1 -DNINT(dx1/xmax)*xmax
+        dy1= dy1 -DNINT(dy1/ymax)*ymax
+        dz1= dz1 -DNINT(dz1/zmax)*zmax
         call forces_5 (dx1,dy1,dz1,ch(i),ch(j),xmax,ymax,zmax,  &
                        alpha,e_c_r1,forceV1)
 !
@@ -2040,7 +1932,7 @@
 !$OMP        pref_eps,xmax,ymax,zmax,epslj_w,      &
 !$OMP        epslj_A,epslj_B,r_cut,r_m,rlj_cut,    &
 !$OMP        rlj_m,addpot1,addpot2,e_lj11,e_lj22)  &
-!$OMP PRIVATE(i,j,ll,jp,dx,dy,dz,r,rsi,r0,rlj,rlj0, &
+!$OMP PRIVATE(i,j,ll,jp,dx,dy,dz,r,rsi,r0,rlj,     &
 !$OMP         sn6,epsav,snt,ccel,e_lj1)            &
 !$OMP REDUCTION(+:fec,e_lj)
 !$OMP DO SCHEDULE(STATIC,1)
@@ -2065,9 +1957,9 @@
       dy= ya(i) -ya(j)
       dz= za(i) -za(j)
 !
-      dx= dx -anint(dx/xmax)*xmax
-      dy= dy -anint(dy/ymax)*ymax
-      dz= dz -anint(dz/zmax)*zmax
+      dx= dx -DNINT(dx/xmax)*xmax
+      dy= dy -DNINT(dy/ymax)*ymax
+      dz= dz -DNINT(dz/zmax)*zmax
 !
 !   prefactor= t_unit*e_unit)**2 /(w_unit*a_unit**3)
 !   pref_eps = t_unit**2/(w_unit*a_unit**2)
@@ -2084,6 +1976,7 @@
 !
           ccel  = 12*pref_eps*(epslj_A*sn6*sn6 -0.5d0*epslj_B*sn6)/(r*r)
           e_lj1 =    pref_eps*(epslj_A*sn6*sn6 -epslj_B*sn6 -addpot1)
+!
           e_lj11= e_lj11 +e_lj1
         else
           ccel  = 0
@@ -2105,6 +1998,7 @@
           epsav = sqrt(ep(i)*ep(j))
           ccel  = 48*pref_eps* epsav*snt*(snt -0.5d0)/(r*r)
           e_lj1 =  4*pref_eps* epsav*(snt*(snt -1.d0) -addpot2)
+!
           e_lj22= e_lj22 +e_lj1
         else 
           ccel  = 0
@@ -2158,8 +2052,6 @@
       subroutine forces_5 (dx,dy,dz,chi,chj,xmax,ymax,zmax,  &
                            alpha,e_c_r0,forceV)
 !*---------------------------------------------------------------------
-!  Short-range forces
-!
       use, intrinsic :: iso_c_binding 
       implicit none
       include  'param_tip5p_D07a.h'
@@ -2167,9 +2059,9 @@
       real(C_DOUBLE) :: dx,dy,dz,chi,chj,xmax,ymax,zmax,  &
                         alpha,e_c_r0,forceV,r,r2,ar,tt,erfc
 !
-      dx= dx -anint(dx/xmax)*xmax  !<- generic function name of anint
-      dy= dy -anint(dy/ymax)*ymax
-      dz= dz -anint(dz/zmax)*zmax
+      dx= dx -DNINT(dx/xmax)*xmax
+      dy= dy -DNINT(dy/ymax)*ymax
+      dz= dz -DNINT(dz/zmax)*zmax
 !
       r2 = dx**2 +dy**2 +dz**2
       r  = sqrt(r2)
@@ -2185,7 +2077,6 @@
 !
 !     rsc= dmax1(r,rscCL) 
       e_c_r0 = chi*chj*erfc*exp(-ar**2)/r 
-!
       forceV = chi*chj*(erfc/r +2.d0*alpha/sqrtpi)      &
                                           *exp(-ar**2)/r2 
       return
@@ -2195,31 +2086,30 @@
 !cccccccccccccc   p3m (fortran 77)  ccccccccccccccccccccccccccccccccccc
 !                                 26.10.1999 
 !                                     Motohiko Tanaka, Christian Holm
-!  calling sequences:
+!  Calling sequences:
 !
 !     call  p3m_init (length,alpha,mesh0,ip)
 !     call  p3m_perform (coox,cooy,cooz,q,fx,fy,fz,e_coulomb_p3m)
 !
 !/*---------------------------------------------------------------------
-! subunit:  p3m_v2.f  (fortran 90)
+! Subunit:  p3m_v2.f  (fortran 90)
 ! 
-!       version   20.10.1999 (ch) 
-!       corrected 26.10.1999 (mt)
+!       Version   20.10.1999 (ch) 
+!       Corrected 26.10.1999 (mt)
 !                 23.06.2000 (mt)
 !
-! version:  20 january 1999
-! author:   Markus Deserno
+! Version:  20 january 1999
+! Author:   Markus Deserno
 !
 !    Brillouin is now a parameter
 !    maxinterpol --> mintpol
 !    floor --> defined: must be stepwise at x= 0.
-!    dround --> = anint (round off to nearest integer). 
+!    dround --> = DNINT (round off to nearest integer). 
 !
 !*---------------------------------------------------------------------
       subroutine p3m_perform (xa,ya,za,ch,fek,npq,first_p3m)
 !*---------------------------------------------------------------------
 !  Only charged particles
-!
       use, intrinsic :: iso_c_binding
 !
       use omp_lib
@@ -2227,8 +2117,7 @@
 !
       include    'param_tip5p_D07a.h'
 !     include    'aslfftw3.f03' ! by SX
-      include    'fftw3.f03'    ! by Intel, or parallel case
-!              "call fftw_plan_with_nthreads" must be commented out 
+      include    'fftw3.f03'    ! by Intel, or parallel code
 !
 !     integer(C_INT),save :: n_thread
       type(C_PTR),save :: plan, pinv1,pinv2,pinv3
@@ -2284,20 +2173,21 @@
       if(first_p3m) then
         first_p3m= .false.
 !
+!  for Fujitsu FX100
 !       ierror= 0
 !       n_thread= 1 ! 8 
 !       ddd= fftw_init_threads (ierror)
 !       call fftw_plan_with_nthreads (n_thread)
 !
-!  in SX case
-!      call fftw_plan_with_nthreads (omp_get_max_threads()) 
+!  for NEC SX -> Parallel code is the same at all  7.09.2023 
+!!      call fftw_plan_with_nthreads (omp_get_max_threads()) 
 !
-!       call dfftw_plan_dft_r2c_3d  &
+!       call dfftw_plan_dft_r2c_3d  &  ! FX100
         plan= fftw_plan_dft_r2c_3d  &
                 (mesh,mesh,mesh,qq,qq_c,FFTW_ESTIMATE)
 !                   n0,m0,l0 ---------> (n0/2+1) complex
 !
-!       call dfftw_plan_dft_c2r_3d  &
+!       call dfftw_plan_dft_c2r_3d  &  ! FX100
         pinv1= fftw_plan_dft_c2r_3d  &
                 (mesh,mesh,mesh,phi_x_c,phi_x,FFTW_ESTIMATE)
         pinv2= fftw_plan_dft_c2r_3d  &
@@ -2313,15 +2203,15 @@
       end do
 !
 ! --------------------------------------
-      ei = cmplx(0.d0,1.d0,kind(0d0))  !<- cmplx(real,imag,kind(0d0))
+      ei = cmplx(0.d0,1.d0,kind(0.d0))
 ! --------------------------------------
-      pi = 4.d0*atan(1.d0)
+      pi = 4.d0*datan(1.d0)
       meshmask = mesh-1     
 !
-      dmesh = dble(mesh)               !<- real*8 dble(integer,kind(0d0))
+      dmesh = dfloat(mesh)
       hi = dmesh / Lewald
 !
-      mi2 = 2.d0*dble(mintpol)
+      mi2 = 2.d0*dfloat(mintpol)
       assignshift = mesh -(ip0-1)/2
 !
       qzahl = 0
@@ -2331,11 +2221,11 @@
 !  Charged sites of water H-H-M-M (O-site is not counted).
 !  Co/counter ions are counted.
       do i= 0,npq-1
-      if (abs(ch(i)) .gt. 1.d-5) then 
-!                                  anint by round off (-0.5,0.5)
-        coop(qzahl, 0) = xa(i) - anint(xa(i)/Lewald -0.5d0)*Lewald !<- generic name
-        coop(qzahl, 1) = ya(i) - anint(ya(i)/Lewald -0.5d0)*Lewald
-        coop(qzahl, 2) = za(i) - anint(za(i)/Lewald -0.5d0)*Lewald
+      if (dabs(ch(i)) .gt. 1.d-5) then 
+!                                  DNINT by round off (-0.5,0.5)
+        coop(qzahl, 0) = xa(i) - DNINT(xa(i)/Lewald -0.5d0)*Lewald 
+        coop(qzahl, 1) = ya(i) - DNINT(ya(i)/Lewald -0.5d0)*Lewald
+        coop(qzahl, 2) = za(i) - DNINT(za(i)/Lewald -0.5d0)*Lewald
 !
         qp(qzahl) = ch(i)
         sum_q_2 = sum_q_2 + qp(qzahl)
@@ -2377,17 +2267,17 @@
       d1  = coop(i,0)*hi + modadd1
       gi0 = int(d1 + modadd2) + assignshift
       g(i,0) = gi0 
-      xarg(i) = int( (d1 - anint(d1) + 0.5d0)*mi2 )
+      xarg(i) = int( (d1 - DNINT(d1) + 0.5d0)*mi2 )
 !      
       d1  = coop(i,1)*hi + modadd1 
       gi1 = int(d1 + modadd2) + assignshift
       g(i,1) = gi1
-      yarg(i) = int( (d1 - anint(d1) + 0.5d0)*mi2 )
+      yarg(i) = int( (d1 - DNINT(d1) + 0.5d0)*mi2 )
 !      
       d1  = coop(i,2)*hi + modadd1 
       gi2 = int(d1 + modadd2) + assignshift
       g(i,2) = gi2 
-      zarg(i) = int( (d1 - anint(d1) + 0.5d0)*mi2 )
+      zarg(i) = int( (d1 - DNINT(d1) + 0.5d0)*mi2 )
 !
       m0= -1
 !***
@@ -2414,6 +2304,7 @@
 !
 !
       fft_scale2= mesh**3  
+!     call dfftw_execute_dft_r2c (plan,qq,qq_c)  ! FX100
       call fftw_execute_dft_r2c (plan,qq,qq_c)
 !
 !
@@ -2436,6 +2327,7 @@
       end do 
       end do 
 !
+!     call dfftw_execute_dft_c2r (pinv,phi_x_c,phi_x)  ! FX100
       call fftw_execute_dft_c2r (pinv1,phi_x_c,phi_x)
       call fftw_execute_dft_c2r (pinv2,phi_y_c,phi_y)
       call fftw_execute_dft_c2r (pinv3,phi_z_c,phi_z)
@@ -2514,7 +2406,7 @@
 !-----------
       exponent_limit = 30.d0
 !
-      pi = 4.d0*atan(1.d0)
+      pi = 4.d0*datan(1.d0)
       fak1 = 1.d0/dmesh
       fak2 = (pi/(alpha*Lewald))**2
 !
@@ -2582,7 +2474,7 @@
       end if
 !
       do i= 0,mesh-1
-      dn(i) = dble(i) - anint(dble(i)/dmesh)*dmesh
+      dn(i) = dfloat(i) - DNINT(dfloat(i)/dmesh)*dmesh
       end do
 !
       dn(mesh/2) = 0.d0
@@ -2674,7 +2566,7 @@
                      " charge assignment function")') ip0
       end if
 !
-      dinterpol= dble(mintpol)
+      dinterpol= dfloat(mintpol)
 !
       if (ip0.eq.1) then
       do i= -mintpol, mintpol
@@ -2697,33 +2589,33 @@
       intcaf(2, i+mintpol) = 0.50d0*(0.5d0 + x)**2
       end do
 !
-      else if (ip0.eq.4) then
-      do i= -mintpol, mintpol
-      x= i/(2.d0*dinterpol)
-      intcaf(0, i+mintpol) = &
-                             ( 1.d0+x*( -6.d0+x*( 12.d0-x* 8.d0)))/48.d0
-      intcaf(1, i+mintpol) = &
-                             (23.d0+x*(-30.d0+x*(-12.d0+x*24.d0)))/48.d0
-      intcaf(2, i+mintpol) = &
-                             (23.d0+x*( 30.d0+x*(-12.d0-x*24.d0)))/48.d0
-      intcaf(3, i+mintpol) = & 
-                             ( 1.d0+x*(  6.d0+x*( 12.d0+x* 8.d0)))/48.d0
-      end do
+!     else if (ip0.eq.4) then
+!     do i= -mintpol, mintpol
+!     x= i/(2.d0*dinterpol)
+!     intcaf(0, i+mintpol) = &
+!                            ( 1.d0+x*( -6.d0+x*( 12.d0-x* 8.d0)))/48.d0
+!     intcaf(1, i+mintpol) = &
+!                            (23.d0+x*(-30.d0+x*(-12.d0+x*24.d0)))/48.d0
+!     intcaf(2, i+mintpol) = &
+!                            (23.d0+x*( 30.d0+x*(-12.d0-x*24.d0)))/48.d0
+!     intcaf(3, i+mintpol) = & 
+!                            ( 1.d0+x*(  6.d0+x*( 12.d0+x* 8.d0)))/48.d0
+!     end do
 !
-      else if (ip0.eq.5) then
-      do i= -mintpol, mintpol
-      x= i/(2.d0*dinterpol)
-      intcaf(0, i+mintpol) = &
-               (  1.d0+x*( -8.d0+x*(  24.d0+x*(-32.d0+x*16.d0))))/384.d0
-      intcaf(1, i+mintpol) = &
-               ( 19.d0+x*(-44.d0+x*(  24.d0+x*( 16.d0-x*16.d0))))/ 96.d0
-      intcaf(2, i+mintpol) = &
-               (115.d0+x*        x*(-120.d0+x*        x*48.d0))  /192.d0
-      intcaf(3, i+mintpol) = &
-               ( 19.d0+x*( 44.d0+x*(  24.d0+x*(-16.d0-x*16.d0))))/ 96.d0
-      intcaf(4, i+mintpol) = &
-               (  1.d0+x*(  8.d0+x*(  24.d0+x*( 32.d0+x*16.d0))))/384.d0
-      end do
+!     else if (ip0.eq.5) then
+!     do i= -mintpol, mintpol
+!     x= i/(2.d0*dinterpol)
+!     intcaf(0, i+mintpol) = &
+!              (  1.d0+x*( -8.d0+x*(  24.d0+x*(-32.d0+x*16.d0))))/384.d0
+!     intcaf(1, i+mintpol) = &
+!              ( 19.d0+x*(-44.d0+x*(  24.d0+x*( 16.d0-x*16.d0))))/ 96.d0
+!     intcaf(2, i+mintpol) = &
+!              (115.d0+x*        x*(-120.d0+x*        x*48.d0))  /192.d0
+!     intcaf(3, i+mintpol) = &
+!              ( 19.d0+x*( 44.d0+x*(  24.d0+x*(-16.d0-x*16.d0))))/ 96.d0
+!     intcaf(4, i+mintpol) = &
+!              (  1.d0+x*(  8.d0+x*(  24.d0+x*( 32.d0+x*16.d0))))/384.d0
+!     end do
 !
 !     else if (ip0.eq.6) then
 !     do 600 i= -mintpol, mintpol
@@ -2813,7 +2705,7 @@
       end if
 !  
       do i= 0,mesh-1
-      meshift(i) = i - anint(i/dmesh)*dmesh
+      meshift(i) = i - DNINT(i/dmesh)*dmesh
       end do
 !
       return
@@ -2839,17 +2731,17 @@
       c6 = -0.1984126984127d-3
       c8 =  0.2755731922399d-5
 !
-      pi = 4.d0*atan(1.d0)
+      pi = 4.d0*datan(1.d0)
       pid = pi*d
 !
-      if (abs(d).gt.epsi) then
+      if (dabs(d).gt.epsi) then
          sinc = dsin(pid) / pid
       else 
          pid2 = pid*pid
          sinc = 1.d0 + pid2*( c2 + pid2*( c4 + pid2*(c6 + pid2*c8) ) )
       end if
 !
-      if(abs(sinc).lt.1.d-100) sinc= 0
+      if(dabs(sinc).lt.1.d-100) sinc= 0
 !
       return
       end function sinc
@@ -2968,7 +2860,7 @@
       end if
 !
       read (08,'(a40,f20.0)') text1,temperat
-!!    read (08,'(a40,f20.0)') text1,xmax     ! <- mhr0073.xyz
+!!    read (08,'(a40,f20.0)') text1,xmax     ! <- mhh.exyz
 !!    read (08,'(a40,f20.0)') text1,ymax
 !!    read (08,'(a40,f20.0)') text1,zmax
       read (08,'(a40,f20.0)') text1,rcutpme
@@ -3091,17 +2983,17 @@
       real(C_DOUBLE)  temperat
       common/icetemp/ temperat
 !
-      integer(C_INT)   io_pe,i,j,k,l
+      integer(C_INT)   io_pe,i,j,l
       common/sub_proc/ io_pe
 !
-      real(C_DOUBLE) anint,shift,vmax1,dgaus2,svx,svy,svz,amas, &
-                     xnum0,ynum0,znum0,e00,e10,e20,e30,rr
+      real(C_DOUBLE) shift,vmax1,dgaus2,svx,svy,svz,amas, &
+                     xnum0,ynum0,znum0,rr
       real(C_float)  ranff
 !
       character(len=2) tip
       common/tipw/ tip(npq5)
 !
-      integer(C_INT)   nwaTIP5,iww,npar4,npar1,jint,jmax
+      integer(C_INT)   nwaTIP5,iww,npar4,npar1
       character(len=4) tip1,tip2,tip3,tip4,tip5,dummy1*1,dummy5*5, &
                        read113*108,read42*42
 !
@@ -3133,7 +3025,7 @@
 !        t^2*e^2/(w*a^3) *48 a/e^2 = 48 t^2/(w*a^2)= 48*pref_eps
 !     rlj = r/(ag(i)+ag(j))
 !     if(rlj.le.rlj_cut) then
-!       rlj0= max(rlj,rlj_m)  ! if rlj > rlj_m 
+!       rlj0= dmax1(rlj,rlj_m)  ! if rlj > rlj_m 
 !       rsi = 1.d0/rlj0**2
 !       snt = rsi*rsi*rsi
 !       epsav = sqrt(ep(i)*ep(j))
@@ -3150,7 +3042,7 @@
 !   KJoule/mol = 1.d10 erg/6.02d23 = 1.66d-14 erg
 !        cf. Phys.Fluid 2012
 !
-      epslj_w = 1.02d-14 ! 2.189d-14 ! (kjoule/mol) in erg
+      epslj_w = 1.02d-14 ! (kjoule/mol) in erg
 !!    awat = 3.166d0 /2.d0 ! for hybrid LJ
 !
 !  phi= A/r^12 -B/r^6 -> d.phi/dr= -12A/r^13 +6B/r^7= 0
@@ -3202,24 +3094,17 @@
                "           for temperature (k) = ",0pf8.1,/,         &
                " ************************************************",/)') &
                                     a_unit,t_unit,w_unit,vth0,temperat
-!
-        write(11,*) "if_xyz1=",if_xyz1,"  if_xyz2=",if_xyz2
-        write(11,*)
       end if
 !
 !  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!!    if(kstart.eq.1 .or. kstart.eq.3) then  ! L.601: np= 0
-!!      np= 0                                ! parm.h must declare np=0
-!!    end if
-!
       if(if_xyz1) then
         nq= 6210  ! 5-point water 6210 atoms, 1242 molecules
-        np=  216  ! unified atom, 216 (1080 CH4 atoms)
+        np=  216  ! unified atom = 216 (1080 CH4 atoms)
 !
-!  [1] number of atoms for water
+!  [1] number of atoms
       else if(if_xyz2) then
-        nq= 8640  ! 1cx666a.exyz <- nq=8640 atoms (6912,4-body)
-        np=    0  ! Salt ions    <- np=0
+        nq=  nq0  ! 1cx666a.exyz <- nq=8640 atoms
+        np=  np0  ! Salt ions    <- np=4
       end if
 !
       nwaTIP5= nq
@@ -3227,17 +3112,16 @@
 !* General
 !
       l= 0
-      do i= 1,nq,5   ! O-H(1)-H(2)-L(1)-L(2)
+      do i= 1,nq,5  ! O-H(1)-H(2)-L(1)-L(2)
       l= l +5
 !
-      ch(l-4)=  0    ! q_O= 0 
+      ch(l-4)=  0         ! q_O= 0  ! -0.85 e
       ch(l-3)=  q_H
       ch(l-2)=  q_H
       ch(l-1)=  q_L
       ch(l  )=  q_L
 !
-!  For Exc             TIP4P        SPC
-!     ch(l-3)=  0    ! 0         ! 
+!  For exc             TIP4P        SPC
 !     ch(l-2)=  q_H  ! 0.4238d0  !  0.42 e
 !     ch(l-1)=  q_O  !-0.8476d0  ! -0.85 e
 !     ch(l  )=  q_H  ! 0.4238d0  !  0.42 e
@@ -3248,7 +3132,7 @@
       qch(l  )=  0
 !
       am(l-4)= masso      ! 16.  ! O
-      am(l-3)= massh      !  1.  ! H
+      am(l-3)= massh      ! 16.  ! O
       am(l-2)= massh      !  1.  ! H
       am(l-1)= 0
       am(l  )= 0
@@ -3291,8 +3175,10 @@
 !# Radius of counterion Na+............:    0.9200000000000000
 !# Radius of coion Cl-.................:    1.5890000000000000
 !
+      if(np.gt.0) then
+!*
       if(if_xyz2) then
-!+
+!
         j= nq1
         do i= nq+1,nq+np
         j= j +1
@@ -3318,10 +3204,9 @@
           amm(j)= massCl
         end if
         end do
-      end if
 !
-!
-      if(if_xyz1) then
+      else if(if_xyz1) then
+!*
         do i= nq+1,nq+np
         l= l +1
         ch(l)= 0
@@ -3333,19 +3218,19 @@
         do j= nq1+1,nq1+np
         amm(j)= massme
         end do
+!*
+      end if 
       end if 
 !++++++++++++++++++++++++++++++++++++++++++++++++++
 !
       if(io_pe.eq.1) then
-        if(np.gt.0) then
-          do i= nq+1,nq+np
-          write(11,'(" i, ch, am, ep, qch,ag(MM)=",i5,1p5d12.5)') &
+        do i= nq+1,nq+10  !+np
+        write(11,'(" i, ch, am, ep, qch,ag(MM)=",i5,1p5d12.5)') &
                                  i,ch(i),am(i),ep(i),qch(i),ag(i)
-          end do
-        end if
+        end do
 !
         write(11,*)
-        write(11,*) "L.3270: nq=",nq
+        write(11,*) "L.3170: nq=",nq
         write(11,*) " this l is=",l
 ! 
         write(11,*)
@@ -3363,7 +3248,7 @@
       end if
 !
 !   ++++++++++++++++++++++++++
-      if(kstart.ge.1) then  ! kstart >= 1
+      if(kstart.ge.1) then  ! Restart with kstart>= 1
         if(io_pe.eq.1) then
           write(11,*) "Restart= 1 or 2 ..."
           write(11,*) " Start at time t=0 & Edc>0, or restart from t>0"
@@ -3381,31 +3266,35 @@
 !*  use ice(ic) maker iceic.c by m.matsumoto     *
 !*************************************************
 !  kstart= 0 is continued below
-!  both 1cx666_.exyz and 1cx666_.q must be changed !
+!  both 1cx444_.exyz and 1cx444_.q must be changed !
 !
       if(if_xyz1) then
 !
-        open (unit=17,file='mh3.exyz',form='formatted') 
+        open (unit=17,file='mh4.exyz',form='formatted') 
+!       open (unit=17,file='mhh.exyz',form='formatted') 
 !
       else if(if_xyz2) then
 !
         open (unit=17,file='1cx666a.exyz',form='formatted')  ! 273 K 
-      end if                                                 ! in data  
+!
+      end if
 !
       if(io_pe.eq.1) then
 !       write(11,*) "FT17: mh3.exyz for test case"
-        write(11,*) "FT17: 1cx666a.exyz for water"
+        write(11,*) "FT17: mh4.exyz for test case"
+!       write(11,*) "FT17: mhh.exyz for test case"
+!       write(11,*) "FT17: 1cx666a.exyz for water"
         write(11,*) "......................................."
       end if
 !
 !  Format is changed of npar4 as 4 or 5 digits !
-      read(17,'(a108)') read113
+      read(17,'(a113)') read113
       read(17,'(i4)') npar4  ! npar4= 4-atom water + ions
-!     read(17,'(i5)') npar4  ! 5 digits, npar4= 4-atom water + ions
       read(17,'(a5)') dummy5
 !
       if(io_pe.eq.1) then
-        write(11,*) "1cx666a.exyz"
+!       write(11,*) "1cx666a.exyz"
+        write(11,*) "mh4.exyz"
         write(11,*) " npar4 (4-OHHM + ions)=",npar4
         write(11,*) "   5-atom water (nwaTIP5)=",nwaTIP5
         write(11,*)
@@ -3446,17 +3335,7 @@
       yhh= (ya(i+2)+ya(i+1))/2
       zhh= (za(i+2)+za(i+1))/2
 !
-!     phwat  = 104.52d0   ! tip4p
-!     doh    =  0.9572d0 
-!     dohcos = doh * cos(pi*phwat/(2*180.d0))
-!     dohsin = doh * sin(pi*phwat/(2*180.d0))
-!
-!     phtop  = 109.47d0
-!     doL    = 0.70d0
-!     doLcos = doL * cos(pi*phtop/(2*180.d0))
-!     doLsin = doL * sin(pi*phtop/(2*180.d0))
       dohL = dohcos +doLcos
-!          (x1+x2)/2  (doh*cos1 +doL*cos2)
       xpoint= xhh +dohL*xxb/vec1
       ypoint= yhh +dohL*yyb/vec1
       zpoint= zhh +dohL*zzb/vec1
@@ -3473,16 +3352,6 @@
       xa(i+4)= xpoint -doLsin*xxc/vec3
       ya(i+4)= ypoint -doLsin*yyc/vec3
       za(i+4)= zpoint -doLsin*zzc/vec3
-!
-      if(io_pe.eq.1 .and. i.le.1) then
-        write(11,*) "i=1-5"
-        write(11,995) i,xa(i),ya(i),za(i)       ! O
-        write(11,995) i+1,xa(i+1),ya(i+1),za(i+1)
-        write(11,995) i+2,xa(i+2),ya(i+2),za(i+2)
-        write(11,995) i+3,xa(i+3),ya(i+3),za(i+3)
-        write(11,995) i+4,xa(i+4),ya(i+4),za(i+4)
-  995   format(i5,3f8.3)
-      end if
 !
 !  GC position of water
       xg0= (16*xa(i) +xa(i+1) +xa(i+2))/18.d0 
@@ -3541,22 +3410,29 @@
       iww= iww +5
       if(iww.ge.nwaTIP5) go to 373
       go to 370
-!
+
   373 nq= i - 1
       if(io_pe.eq.1) then
-        write(11,*) "L.3450, this value is nq=",nq
+        write(11,*) "L.3430, this final value is nq=",nq
 !
-        write(11,*) "tip5/p..."
+        write(11,*) "tip5p..."
         do i= 1,10
         write(11,'(i5,3f11.5)') i,xa(i),ya(i),za(i)
   471   format(i5,3f11.5)
         end do
+!
+        do i= nq-9,nq
+        write(11,'(i5,3f11.5)') i,xa(i),ya(i),za(i)
+        end do
+!
+        write(11,*) "final nq=",nq
       end if
 !
-!  [3a] Positions
-!   MH: CH4
+!+++++++++++++++++++++++++++++++++++++++++++
+!  [3] Positions
+!   Avoid closed neighbors
 !
-      if(if_xyz1) then
+      if(np.gt.0) then
 !**
 !  Methane
       do i= nq+1,nq+np
@@ -3570,11 +3446,10 @@
       ya(i)= yc1      
       za(i)= zc1      
       end do
+      end if
 !
       if(io_pe.eq.1) then
-        write(11,*) "final MH: nq+np=",nq+np
-      end if
-!***
+        write(11,*) "final nq+np=",nq+np
       end if
 !
       read(17,*)
@@ -3587,47 +3462,38 @@
       xmax= xmax1
       ymax= ymax2
       zmax= zmax3
-!*
-!+++++++++++++++++++++++++++++++++++++++++++
-!  [3b] Positions
-!   Additional salt ions
 !
-      if(if_xyz2 .and. np.gt.0) then
-!**
-      do i= nq+1,nq+np
-  650 xa(i)= xmax*ranff(0.)
-      ya(i)= ymax*ranff(0.)
-      za(i)= zmax*ranff(0.)
+!*
+!     do i= nq+1,nq+np
+! 650 xa(i)= xmax*ranff(0.)
+!     ya(i)= ymax*ranff(0.)
+!     za(i)= zmax*ranff(0.)
 !
 !  Spacing rr > 1.5 Ang
-      do k= 1,nq
-      rr= sqrt((xa(i)-xa(k))**2 +(ya(i)-ya(k))**2  &
-                                +(za(i)-za(k))**2)
-      if(rr.lt.1.5d0) then 
-        go to 650
-      end if
-      end do
+!     do k= 1,nq
+!     rr= sqrt((xa(i)-xa(k))**2 +(ya(i)-ya(k))**2  &
+!                               +(za(i)-za(k))**2)
+!     if(rr.lt.1.5d0) then 
+!       go to 650
+!     end if
+!     end do
 !
-      end do
+!     end do
 !*
       if(io_pe.eq.1) then
-        write(11,*) '# Salt i=nq+1,nq+np'
+        write(11,*) '# Salt or CH4: i=nq+1,nq+np'
 !
-        do i= nq+1,nq+np
+        do i= nq+1,nq+10 !+np
         write(11,'(i6,3f10.2)') i,xa(i),ya(i),za(i)
         end do
 !
         write(11,*)
-      end if
 !**
-      end if
-!+++++++++++++++++++++++++++++++++++++++++++
-!
-      if(io_pe.eq.1) then
         write(11,*) "1:",xmax1,ymax1,zmax1
         write(11,*) "2:",xmax2,ymax2,zmax2
         write(11,*) "3:",xmax3,ymax3,zmax3
       end if
+!+++++++++++++++++++++++++++++++++++++++++++
 !
       close(17)
 !     ++++++++++
@@ -3638,19 +3504,15 @@
         write(11,*) "   np(salt)=",np
         write(11,*)
 !
-        write(11,*) " xmax1=",xmax1
-        write(11,*) "....................."
-        write(11,*)
-!
-        write(11,*) "L.3550: tip     ch     am      ep      ag"
+        write(11,*) "L.3400: tip     ch     am      ep      ag"
         do i= 1,10
         write(11,'(a2,3x,1p4d12.5)') tip(i),ch(i),am(i),ep(i),ag(i)
   381   format(a2,3x,1p3d12.5)
         end do
 !
         if(np.gt.0) then
-        do i= nq+1,nq+np
-        write(11,'(a2,3x,1p4d12.5)') tip(i),ch(i),am(i),ep(i),ag(i)
+          do i= nq+np-9,nq+np
+          write(11,'(a2,3x,1p4d12.5)') tip(i),ch(i),am(i),ep(i),ag(i)
         end do
 !
         write(11,*)
@@ -3782,17 +3644,14 @@
         end if
 !
 ! +++++++
-      if(if_xyz1) then
-        open (unit=30,file='mh3.q',form='formatted')    ! Quarternion
+        open (unit=30,file='mh4.q',form='formatted')    ! Quarternion
+!       open (unit=30,file='mhh.q',form='formatted')    ! Quarternion
 !       open (unit=30,file='mh3.e',form='formatted')    ! Euler
-!
-      else if(if_xyz2) then
-        open (unit=30,file='1cx666a.q',form='formatted') 
-      end if
+!       open (unit=30,file='1cx666a.q',form='formatted') 
 !
 !  Format of f18.15,a1 is changed to f8.5,a1,410.4 !!
-        read(30,*)
-        read(30,'(a87)') analic
+        read(30,*)               ! dummy
+        read(30,'(a87)') analic  ! may be a113
         read(30,'(a5)')  dummy5
         read(30,'(f8.5,a1,f8.5,a1,f8.5)') xmax,dummy1,ymax,dummy1,zmax 
         read(30,'(a5)') dummy5
@@ -3800,11 +3659,8 @@
 !       read(30,'(i5)') npar1  !! Large system
 !
         if(io_pe.eq.1) then
-        if(if_xyz1) then
-          write(11,*) "mh3.q"
-        else if(if_xyz2) then
-          write(11,*) "1cx666a.q"
-        end if
+          write(11,*) "mh4.q"
+!         write(11,*) "1cx666a.q"
         end if
 !
 !  in Goldstein book: like a= cos(tht/2) cos((phi+psi)/2)
@@ -3831,16 +3687,11 @@
         A31(j)= 2*(e1(j)*e3(j) +e0(j)*e2(j))
         A32(j)= 2*(e2(j)*e3(j) -e0(j)*e1(j))
         A33(j)= e0(j)**2 -e1(j)**2 -e2(j)**2 +e3(j)**2
-!
-        jmax= j
         end do
 !
         close(30)
 !       +++++++++
 !
-        if(io_pe.eq.1) then
-          write(11,*) "Total j=",jmax
-        end if
       end if
 ! +++++++
 !**
