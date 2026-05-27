@@ -1,11 +1,11 @@
 # Praefix-String......................: TIP70701
-# Maximum cpu time for this run..min .:   120.50000000000000
+# Maximum cpu time for this run..min .:   600.50000000000000
 # Physikalische Endzeit...770000......: 770000.5000000000000
 # Diskretisierungs-Schritt (10fs).....:     0.02500000000000
 # Write out interval IWRT1.FT13,23  50:    50.00000000000000 
 # Write out interval for IWRT2..ppl3d.:  5000.00000000000000 
 # Interval of iwrth for.write(12).....:  5000.00000000000000 
-# Length of equilibration  kstart=0...:  1000.00000000000000
+# Length of equilibration  kstart=0...: 50000.00000000000000
 # Valenz der Gegenionen...............:    1.000000000000000
 # Valenz der negativen Salzionen......:   -1.000000000000000
 # Radius of Na (Ang).....,............:    1.280000000000000
