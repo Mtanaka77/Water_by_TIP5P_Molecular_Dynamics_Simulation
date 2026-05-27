@@ -74,7 +74,7 @@
 !  at L.650. It must be momorized at this value !!
 !
 !  Only parallel Fortran 2003
-! % mpif90 -mcmodel=medium -fpic -O2 -o aax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+! % mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
 !
       program es3d_tip5
 !
@@ -103,8 +103,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,form='formatted')
 !
         write(11,*) "rank, size=",rank,size    ! FT11 is used
-!
-!     Not closing FT11 up to L.700
+        close(11)
       end if
 !
       cl_first= 1
@@ -128,8 +127,8 @@
         write(11,*) "*ipar, wall_time(sec)=",ipar,wall_time7
 !
         close(11)
-!** 
       end if
+!** 
 !
       call mpi_finalize (ierror)
 !
@@ -236,9 +235,13 @@
       nframe= 4
 !
       if(io_pe.eq.1) then
+!       # call lplots, hplot1, etc. are not used 
 !       open (unit=77,file=praefixc//'.77'//suffix2//'.ps',form='formatted')
 !       call gopen (nframe)
 !       close(77)
+!
+        open (unit=11,file=praefixc//'.11'//suffix2,             & 
+              status='unknown',position='append',form='formatted')
 !
         write(11,'(/,"<< tip5p water (trans + rotation) -- es3d >> ", &
                 a8,/,"  today = ",a10,"  time = ",a8,/)') &
@@ -249,6 +252,8 @@
         write(11,*) "L.1230 if_obsv= ",if_obsv
         write(11,*) " if .false,, then it saves unformatted file FT15"
         write(11,*)
+!
+        close(11)
       end if
 !
 !**************************************************************
@@ -259,8 +264,13 @@
       call read_conf (praefix8)
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             & 
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) "praefix8= ",praefix8
         write(11,*) " dt= ",dt
+!
+        close(11)
       end if
 !
 !--------------------------------------------------------------
@@ -302,6 +312,9 @@
       if(kstart.eq.0) then
 !
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             & 
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) "# Water #"
           write(11,'(10f8.4)') (ch(i),i=1,30)
 !
@@ -309,6 +322,8 @@
             write(11,*) "# Methane, or Salt ions..."
             write(11,'(10f8.4)') (ch(i),i=nq+1,nq+np)
           end if
+!
+          close(11)
         end if
 !
 !* Restart data of kstart= 1 or greater
@@ -349,6 +364,9 @@
 !     ----------------
 !
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             & 
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) "file= ",praefixi//".12"//suffix1
           write(11,'(" Restart data are loaded from FT12.....",/, &
                  "   FT12x:",a34,/,                               &
@@ -357,6 +375,7 @@
                  " kstart=2,...from the second time",/)') &
                                      praefixi//'.12'//suffix1,t8
           write(11,*) " t8,it,is...=",t8,it,is,nq,np
+          close(11)
         end if
       end if
 !
@@ -384,6 +403,9 @@
 !
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             & 
+              status='unknown',position='append',form='formatted')
+!
         write(11,'(" number of mx, my, mz: ",3i5,/)') mx,my,mz 
         write(11,*) " p3m successfully initialized !"
 !
@@ -391,6 +413,8 @@
                                                xmax,alpha,vth0
         write(11,*) "..........................................."
         write(11,*)
+!
+        close(11)
       end if
 !
 !************************************
@@ -642,7 +666,11 @@
           tequil= 0.d0 
 !
           if(io_pe.eq.1) then
+            open (unit=11,file=praefixc//'.11'//suffix2,             & 
+                  status='unknown',position='append',form='formatted')
+!
             write(11,*) " Present time t8=",t8,"  is=",is
+            close(11)
           end if
         end if
       end if
@@ -674,7 +702,11 @@
         close(13)
 !       ***************
 !
+        open (unit=11,file=praefixc//'.11'//suffix2,             & 
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " This run uses FT13: ",praefixc//'.13'//suffix2
+        close(11)
       end if
 !
       if(io_pe.eq.1) then
@@ -702,7 +734,11 @@
         close(15)
 !       ***************
 !
+        open (unit=11,file=praefixc//'.11'//suffix2,             & 
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " This run uses FT15: ",praefixc//'.15'//suffix2
+        close(11)
       end if
 !
 !-------------------------------------------------------
@@ -716,6 +752,7 @@
         write(11,*)
         write(11,*) '## This cptot is defined as ',cptot,' min. ##'
         write(11,*)
+!
         close(11)
       end if
 !
@@ -775,6 +812,7 @@
           write(11,*) "# Restart with t >= 0 and exc > 0 !"
           close(11)
           end if
+!
         end if 
       end if 
 !
@@ -2445,7 +2483,11 @@
       end do
 !
 !     if(io_pe.eq.1) then
+!       open (unit=11,file=praefixc//'.11'//suffix2,            &
+!             status='unknown',position='append',form='formatted')
+!
 !       write(11,*) " alias sum uses brillouin = ", brillouin
+!       close(11)
 !     end if
 
       return
@@ -2470,7 +2512,11 @@
       common/sub_proc/ io_pe
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " - calculating differential operator"
+        close(11)
       end if
 !
       do i= 0,mesh-1
@@ -2507,10 +2553,14 @@
 !
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " - calculating influence function with parameters."
         write(11,'("  alpha=",1pd18.11,",  Lewald=",d18.11)') alpha,Lewald
 !
         write(11,*) " p3m - aliasing sums for different nx,ny,nz:"
+        close(11)
       end if
 ! 
       fak1  = dmesh*dmesh*dmesh * 2.d0 / Lewald**2
@@ -2562,8 +2612,12 @@
       real(C_DOUBLE)   dinterpol,x
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,'(/," - interpolating the order-",i2, &
                      " charge assignment function")') ip0
+        close(11)
       end if
 !
       dinterpol= dfloat(mintpol)
@@ -2669,11 +2723,16 @@
 !     else if (ip0.gt.7 .or. ip0.lt.1) then
       else if (ip0.gt.5 .or. ip0.lt.1) then
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             &
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) "error in function ", &
                       "'interpolate_charge_assignment_function':"
           write(11,*) ip0
   611     format("charge assignment order",i2," unknown.",/, &
                  "program terminated.")
+!
+          close(11)
         end if
         call exit(1)
       end if
@@ -2701,7 +2760,11 @@
 !-----------
 ! 
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " - calculating mesh-shift"
+        close(11)
       end if
 !  
       do i= 0,mesh-1
@@ -2763,6 +2826,7 @@
          floor = int(x + xlim) - xlim
        else
          if(io_pe.eq.1) then
+!
            write(06,*) " floor: argument too large -- run terminated."
          end if
          call exit (1)
@@ -2818,7 +2882,10 @@
                                  status='old',form='formatted')
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
         write(11,*) "read_conf: Start parameter read... "
+        close(11)
       end if
 !*
       read (08,'(a40,a8)') text1, praefix8   ! string der simulationserkennung
@@ -2835,10 +2902,13 @@
 !     read (08,'(a40,f20.0)') text1,dtvsm2   ! velocity normalization 
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
         write(11,*) "  tmax =",tmax
         write(11,*) "  dt   =",dt
         write(11,*) "  dtwr =",dtwr
         write(11,*) "  dtwr2=",dtwr2
+        close(11)
       end if
 !
 !     read (08,'(a40,i12)') text1,npp        ! zahl der positive macroionen
@@ -2853,10 +2923,13 @@
 !     zcp = v_g 
 !     zcn = v_sm
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
         write(11,*) "  zcp=",zcp
         write(11,*) "  zcn=",zcn
         write(11,*) "  epslj_p=",epslj_p
         write(11,*) "  epslj_n=",epslj_n
+        close(11)
       end if
 !
       read (08,'(a40,f20.0)') text1,temperat
@@ -2873,12 +2946,15 @@
       read (08,'(a40,f20.0)') text1,tau_wave
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
         write(11,*) "  temperat=",temperat
         write(11,*) "  rcutpme =",rcutpme
         write(11,*) "  rcutlj  =",rcutlj
         write(11,*) "  alpha   =",alpha
         write(11,*) "  edc     =",edc
         write(11,*) "  tau_wave=",tau_wave
+        close(11)
       end if
 !
       rcutpme2 = rcutpme**2   ! <- /cutoffel/
@@ -2887,7 +2963,10 @@
       close(08)
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
         write(11,*) "read_conf: End of parameter read"
+        close(11)
       end if
 !
       return
@@ -3086,6 +3165,9 @@
       massw2= massh
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,'(" ************************************************",/ &
                "    unit of length (cm) = ",1pd14.5,/,               &
                "    unit of time   (s)  = ",d14.5,/,                 &
@@ -3094,6 +3176,7 @@
                "           for temperature (k) = ",0pf8.1,/,         &
                " ************************************************",/)') &
                                     a_unit,t_unit,w_unit,vth0,temperat
+        close(11)
       end if
 !
 !  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -3161,12 +3244,17 @@
       end do
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         do i= 1,nq
         if(i.le.5 .or. i.ge.nq-4) then
           write(11,'(" i, ch, am, ep,qch,ag(wat)=",i5,1p5d12.5)') &
                                    i,ch(i),am(i),ep(i),qch(i),ag(i)
         end if
         end do
+!
+        close(11)
       end if
 !
 !++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -3224,6 +3312,9 @@
 !++++++++++++++++++++++++++++++++++++++++++++++++++
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         do i= nq+1,nq+10  !+np
         write(11,'(" i, ch, am, ep, qch,ag(MM)=",i5,1p5d12.5)') &
                                  i,ch(i),am(i),ep(i),qch(i),ag(i)
@@ -3245,14 +3336,20 @@
                "   epslj_A,epslj_B=",1p2d15.5)') &
                             epslj_w,ch(1),ch(2),ch(4),   &
                             phwat,phtop,epslj_A,epslj_B
+        close(11)
       end if
 !
 !   ++++++++++++++++++++++++++
       if(kstart.ge.1) then  ! Restart with kstart>= 1
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             &
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) "Restart= 1 or 2 ..."
           write(11,*) " Start at time t=0 & Edc>0, or restart from t>0"
           write(11,*)
+!
+          close(11)
         end if
 !
         return
@@ -3280,11 +3377,16 @@
       end if
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
 !       write(11,*) "FT17: mh3.exyz for test case"
         write(11,*) "FT17: mh4.exyz for test case"
 !       write(11,*) "FT17: mhh.exyz for test case"
 !       write(11,*) "FT17: 1cx666a.exyz for water"
         write(11,*) "......................................."
+!
+        close(11)
       end if
 !
 !  Format is changed of npar4 as 4 or 5 digits !
@@ -3293,12 +3395,17 @@
       read(17,'(a5)') dummy5
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
 !       write(11,*) "1cx666a.exyz"
         write(11,*) "mh4.exyz"
         write(11,*) " npar4 (4-OHHM + ions)=",npar4
         write(11,*) "   5-atom water (nwaTIP5)=",nwaTIP5
         write(11,*)
         write(11,*) " xoo,xh1,xh2,xom..."
+!
+        close(11)
       end if
 !
       i= 1
@@ -3374,9 +3481,13 @@
 !
       if(io_pe.eq.1 .and. i.le.5) then
         shift= sqrt(xg1**2 +yg1**2 +zg1**2)
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,'(" Shift, OM distance=",f10.5,3f10.5,/,  &
                    " Water GC position =",3f10.5,/)')      &
                                shift,xg1,yg1,zg1,xg0,yg0,zg0
+        close(11)
       end if
 !
       if(io_pe.eq.1 .and. i.le.15) then
@@ -3397,6 +3508,9 @@
               (2.d0*sqrt((h1x**2+h1y**2+h1z**2)*(hhx**2+hhy**2+hhz**2))) 
         acosa= 180.d0*acos(cosa)/pi
 !
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,'("i,xa,ya,za=",i5,3f12.3)') i,xa(i),ya(i),za(i)
         write(11,'("i,xa,ya,za=",i5,3f12.3)') i+1,xa(i+1),ya(i+1),za(i+1)
         write(11,'("i,xa,ya,za=",i5,3f12.3)') i+2,xa(i+2),ya(i+2),za(i+2)
@@ -3404,6 +3518,7 @@
         write(11,'("i,xa,ya,za=",i5,3f12.3)') i+4,xa(i+4),ya(i+4),za(i+4)
 !
         write(11,*) "cos,acos(deg)=",cosa,acosa
+        close(11)
       end if
 !
       i= i + 5
@@ -3413,6 +3528,9 @@
 
   373 nq= i - 1
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) "L.3430, this final value is nq=",nq
 !
         write(11,*) "tip5p..."
@@ -3426,6 +3544,7 @@
         end do
 !
         write(11,*) "final nq=",nq
+        close(11)
       end if
 !
 !+++++++++++++++++++++++++++++++++++++++++++
@@ -3449,7 +3568,11 @@
       end if
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) "final nq+np=",nq+np
+        close(11)
       end if
 !
       read(17,*)
@@ -3481,6 +3604,9 @@
 !     end do
 !*
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) '# Salt or CH4: i=nq+1,nq+np'
 !
         do i= nq+1,nq+10 !+np
@@ -3492,6 +3618,8 @@
         write(11,*) "1:",xmax1,ymax1,zmax1
         write(11,*) "2:",xmax2,ymax2,zmax2
         write(11,*) "3:",xmax3,ymax3,zmax3
+!
+        close(11)
       end if
 !+++++++++++++++++++++++++++++++++++++++++++
 !
@@ -3499,6 +3627,9 @@
 !     ++++++++++
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " tip5p is used..."
         write(11,*) "   nq      =",nq
         write(11,*) "   np(salt)=",np
@@ -3519,6 +3650,8 @@
         end if
 !*
         write(11,*) "Water atoms (before correction)=",nq
+!
+        close(11)
       end if
 !
 !***************
@@ -3560,7 +3693,11 @@
         s0= s0 +0.5d0*amm(j)*(vx(j)**2 +vy(j)**2 +vz(j)**2)
         end do
 !
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " init: <e_kin>, per molecule =",s0,s0/nq1
+        close(11)
       end if
 !
 !
@@ -3605,17 +3742,25 @@
         s1= s1 +0.5d0*amm(j)*(vx(j)**2 +vy(j)**2 +vz(j)**2)
         end do
 !
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) " init: <e_kin1>, per ion =",s1,s1/(np +1.d-5)
         write(11,*)
 !
         write(11,*) " Number of particles (water, co/counter ions):"
         write(11,*) "  nq, np =",nq,np
+!
+        close(11)
       end if
 !
 !************************************************************
 !  Quaternion file is used in /moldyn/, L.900
 ! 
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*)
         write(11,*) "## Files 1cx666_.exyz -> 1cx666_.q are used in /moldyn/"
         write(11,*) "   The directory Genice-0.22.9 is used. "
@@ -3623,6 +3768,8 @@
         write(11,*)
         write(11,*) "   All processors FT30 must open this file."
         write(11,*)
+!
+        close(11)
       end if
 !
 ! Initial loading: 'analice mh3.exyz -O OW -H HW[12] -f q'
@@ -3640,7 +3787,11 @@
 !     if(it.eq.1) then
       if(.true.) then
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             &
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) " Quaternion is called from subroutine /init/..."
+          close(11) 
         end if
 !
 ! +++++++
@@ -3659,8 +3810,12 @@
 !       read(30,'(i5)') npar1  !! Large system
 !
         if(io_pe.eq.1) then
+          open (unit=11,file=praefixc//'.11'//suffix2,             &
+                status='unknown',position='append',form='formatted')
+!
           write(11,*) "mh4.q"
 !         write(11,*) "1cx666a.q"
+          close(11)
         end if
 !
 !  in Goldstein book: like a= cos(tht/2) cos((phi+psi)/2)
@@ -3785,6 +3940,8 @@
       use, intrinsic :: iso_c_binding 
       implicit none
 !
+      include 'param_tip5p_D07a.h' 
+!
       integer(C_INT) io_pe,it,is,i,j,iss
       common/sub_proc/ io_pe
       common/parm1/ it,is
@@ -3813,7 +3970,11 @@
       is= iss
 !
       if(io_pe.eq.1) then
+        open (unit=11,file=praefixc//'.11'//suffix2,             &
+              status='unknown',position='append',form='formatted')
+!
         write(11,*) ' ## rehist is called: it, new is=',it,is
+        close(11)
       end if
 !
       return
