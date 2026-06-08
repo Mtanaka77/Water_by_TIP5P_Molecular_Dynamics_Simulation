@@ -59,7 +59,7 @@
 !*                     - long 1000 loop                          *
 !*                       - realteil - forces_5                   *
 !*                       - p3m_perform                           *
-!*                     - make files for write(13),write(23)      *
+!*                     - make files for write(21),write(23)      *
 !*              write(12) for preparation of the next restart    *
 !*                                                               *
 !*   Post-processing programs:                                   *
@@ -102,7 +102,7 @@
       if(io_pe.eq.1) then
         open (unit=11,file=praefixc//'.11'//suffix2,form='formatted')
 !
-        write(11,*) "rank, size=",rank,size    ! FT11 is used
+        write(11,'("rank, size=",2i6)') rank,size    ! FT11 is used
         close(11)
       end if
 !
@@ -124,7 +124,7 @@
               status='unknown',position='append',form='formatted')
 !
         write(11,*)
-        write(11,*) "*ipar, wall_time(sec)=",ipar,wall_time7
+        write(11,'("*ipar, wall_time(sec)=",i6,1pd18.10)') ipar,wall_time7
 !
         close(11)
       end if
@@ -268,7 +268,7 @@
               status='unknown',position='append',form='formatted')
 !
         write(11,*) "praefix8= ",praefix8
-        write(11,*) " dt= ",dt
+        write(11,'(" dt= ",1pd18.10)') dt
 !
         close(11)
       end if
@@ -356,10 +356,10 @@
 !                          suffix1='0k', & ! TIP501__0
 !                          suffix0='0')    ! 
 !
-        suffix3= '0z'  !<- it is defined if suffix3= suffix2,
+        suffix3= '3z'  !<- it is defined if suffix3= suffix2,
 !                          and tequil must be this value.then.
         if(suffix2.eq.suffix3) then
-          tequil= t8   ! only tequil when suffix2='0z'
+          tequil= t8   ! only tequil when suffix2='1z'
         end if
 !     ----------------
 !
@@ -370,11 +370,13 @@
           write(11,*) "file= ",praefixi//".12"//suffix1
           write(11,'(" Restart data are loaded from FT12.....",/, &
                  "   FT12x:",a34,/,                               &
-                 "   restart time is t8=",f15.2,/,                &
-                 " kstart=1... Restart(warm) with t=0.",/, &
-                 " kstart=2,...from the second time",/)') &
+                 "   Restart time  t8=",f11.3,/,                  & 
+                 "   kstart=1... Restart(warm) with t=0.",/, &
+                 "   kstart=2,...from the second time",/)')  &
                                      praefixi//'.12'//suffix1,t8
-          write(11,*) " t8,it,is...=",t8,it,is,nq,np
+!
+          write(11,'(" t8,it,is.nq,np=",f11.3,3x,2i8,2i6)') &
+                                     t8,it,is,nq,np
           close(11)
         end if
       end if
@@ -409,7 +411,7 @@
         write(11,'(" number of mx, my, mz: ",3i5,/)') mx,my,mz 
         write(11,*) " p3m successfully initialized !"
 !
-        write(11,'(" xmax, alpha, vth0(water)=",1p3d15.6)') &
+        write(11,'(" xmax, alpha, vth0(water)=",1p3d18.10)') &
                                                xmax,alpha,vth0
         write(11,*) "..........................................."
         write(11,*)
@@ -454,7 +456,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,             & 
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) "Final write(12) at t8=",t8
+        write(11,'("Final write(12) at t8=",f11.3)') t8
         close(11)
 !**
 !
@@ -669,7 +671,7 @@
             open (unit=11,file=praefixc//'.11'//suffix2,             & 
                   status='unknown',position='append',form='formatted')
 !
-            write(11,*) " Present time t8=",t8,"  is=",is
+            write(11,'(" Present time t8=",f11.3,"  is=",i6)') t8,is
             close(11)
           end if
         end if
@@ -678,7 +680,9 @@
 !* Table creation at restart
 !-------------------------------------------------------
       if(io_pe.eq.1) then
-        open (unit=13,file=praefixc//'.13'//suffix2,     &
+!       open (unit=13,file=praefixc//'.13'//suffix2,     &
+!                   status='replace',form='unformatted') 
+        open (unit=21,file=praefixc//'.21'//suffix2,     &
                     status='replace',form='unformatted') 
 !
         zcp4   = zcp
@@ -689,7 +693,9 @@
         ymax4  = ymax
         zmax4  = zmax
 !
-        write(13) nq,np,zcp4,zcn4,             &  !<- np=0
+!       write(13) nq,np,zcp4,zcn4,             &  !<- np=0
+!                 edc4,tau_w4,xmax4,ymax4,zmax4
+        write(21) nq,np,zcp4,zcn4,             &  !<- np=0
                   edc4,tau_w4,xmax4,ymax4,zmax4
 !
         do i= 1,nq+np                             !<- np=0, 1,nq
@@ -698,14 +704,16 @@
         qch4(i)= qch(i)
         end do
 !
-        write(13) ch4,am4,qch4  !<- 1,nq
-        close(13)
+!       write(13) ch4,am4,qch4  !<- 1,nq
+!       close(13)
+        write(21) ch4,am4,qch4  !<- 1,nq
+        close(21)
 !       ***************
 !
         open (unit=11,file=praefixc//'.11'//suffix2,             & 
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) " This run uses FT13: ",praefixc//'.13'//suffix2
+        write(11,*) " This run uses FT21: ",praefixc//'.21'//suffix2
         close(11)
       end if
 !
@@ -750,7 +758,8 @@
               status='unknown',position='append',form='formatted')
 !
         write(11,*)
-        write(11,*) '## This cptot is defined as ',cptot,' min. ##'
+        write(11,'("## This cptot is defined as ",1pd18.10," min. ##")') &
+                      cptot
         write(11,*)
 !
         close(11)
@@ -778,7 +787,7 @@
                 status='unknown',position='append',form='formatted')
 !
           write(11,*) "## t8 > tequil has reached, a run continues ##"
-          write(11,*) "   time now is t8=",t8
+          write(11,'("   time now is t8=",f11.3)') t8
           write(11,*)
 !
           close(11)
@@ -1326,7 +1335,8 @@
         open (unit=11,file=praefixc//'.11'//suffix2,            &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) "Periodic iwrt3 write(25) at nnd, t8=",nnd,t8 
+        write(11,'("Periodic iwrt3 write(25) at nnd, t8=",i6,f11.3)') &
+                    nnd,t8
         close(11)
 !**
       end if
@@ -1337,7 +1347,9 @@
 !
       if(io_pe.eq.1 .and. iwrt1.eq.0) then
 !
-        open (unit=13,file=praefixc//'.13'//suffix2,               & 
+!       open (unit=13,file=praefixc//'.13'//suffix2,               & 
+!             status='unknown',position='append',form='unformatted')
+        open (unit=21,file=praefixc//'.21'//suffix2,               & 
               status='unknown',position='append',form='unformatted')
 !
         do i= 1,nq+np  !<- 1,nq  np=0
@@ -1347,8 +1359,10 @@
         end do
 !
         t4= t8
-        write(13) t4,x4,y4,z4 
-        close(13)
+!       write(13) t4,x4,y4,z4 
+!       close(13)
+        write(21) t4,x4,y4,z4 
+        close(21)
       end if
 !---------------------------------------------------------------------
 !*  write(23)
@@ -1473,7 +1487,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,            &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) "Periodic iwrth write(12) at t8=",t8 
+        write(11,'("Periodic iwrth write(12) at t8=",f11.3)') t8 
         close(11)
 !**
       end if
@@ -1504,7 +1518,8 @@
         open (unit=11,file=praefixc//'.11'//suffix2,             &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) "  Final: t8, it, tmax=",t8,it,tmax
+        write(11,'("  Final: t8, it, tmax=",f11.3,3x,i8,f11.3)') &
+                                                       t8,it,tmax
         close(11)
       end if
 !**
@@ -3531,7 +3546,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,             &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) "L.3430, this final value is nq=",nq
+        write(11,*) "L.3540, this final value is nq=",nq
 !
         write(11,*) "tip5p..."
         do i= 1,10
@@ -3635,7 +3650,7 @@
         write(11,*) "   np(salt)=",np
         write(11,*)
 !
-        write(11,*) "L.3400: tip     ch     am      ep      ag"
+        write(11,*) "L.3640: tip     ch     am      ep      ag"
         do i= 1,10
         write(11,'(a2,3x,1p4d12.5)') tip(i),ch(i),am(i),ep(i),ag(i)
   381   format(a2,3x,1p3d12.5)
@@ -3745,7 +3760,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,             &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) " init: <e_kin1>, per ion =",s1,s1/(np +1.d-5)
+        write(11,*) " /init/: <e_kin1>, per ion =",s1,s1/(np +1.d-5)
         write(11,*)
 !
         write(11,*) " Number of particles (water, co/counter ions):"
@@ -3973,7 +3988,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2,             &
               status='unknown',position='append',form='formatted')
 !
-        write(11,*) ' ## rehist is called: it, new is=',it,is
+        write(11,'(" ## rehist is called: it, new is=",2i8)'),it,is
         close(11)
       end if
 !
