@@ -73,8 +73,13 @@
 !  it may be tequil=t8 at L:350, or by the statememt tequil=0 
 !  at L.650. It must be momorized at this value !!
 !
-!  Only parallel Fortran 2003
-! % mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+! >> gfortran Fortran 2003
+! $ mpif90 -mcmodel=medium -fpic -O2 -o ax.out @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+! >> PGFortran
+! $ mpif90 -mcmodel=medium -fast -tp=px -O2 @p3mtip5p07a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 
+!
+! $ mpiexec -n 6 a.out &  (proc>=6 or more)
+!*****************************************************************
 !
       program es3d_tip5
 !
