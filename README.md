@@ -20,6 +20,10 @@ The fortran code with MPI is given in the file @p3mtip5p07a.f03 with additional 
 The freezing ice state by microwaves, which is our theory discovery in JCP 2007 mentioned 
 above, remains basically the same due to the structure of six-membered ice ! 
 
+It is noted that self-diffusion of the P3Mtip5 code is as much as 60 % of the kinetic energy.
+One must subtract the kinetic energy as exc=0 case by five plus five periods of periods from
+the run with exc> 0 for t> t_initial_period.
+
 Methane hydrate is simulated by switching to if_xyz1=.true. of the TIP5P code, 
 like with the SPC/E code (Ref. 3). We need the initial coordinate file mh3.exyz and quaternions mh3.q. 
 It runs up to t= 1.7 x 10^(-8) s with E_x = 3. x 10^7 V/cm, which is terminated suddenly due to 
