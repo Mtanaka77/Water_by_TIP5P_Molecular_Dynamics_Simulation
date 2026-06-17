@@ -21,7 +21,7 @@ The freezing ice state by microwaves, which is our theory discovery in JCP 2007 
 above, remains basically the same due to the structure of six-membered ice ! 
 
 It is noted that self-diffusion of the P3Mtip5 code is as much as 60 % of the kinetic energy.
-One must subtract the kinetic energy of the exc= 0 case by five plus five periods of time from
+One must subtract the kinetic energy of the exc= 0 run by initial five plus five periods of time from
 the run with exc> 0 for t> t_initial_period, typically of 50000. in 10 fs. .
 
 Methane hydrate is simulated by switching to if_xyz1=.true. of the TIP5P code, 
