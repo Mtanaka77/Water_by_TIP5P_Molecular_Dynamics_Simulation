@@ -20,7 +20,7 @@ The fortran code with MPI is given in the file @p3mtip5p07a.f03 with additional 
 The freezing ice state by microwaves, which is our theory discovery in JCP 2007 mentioned 
 above, remains basically the same due to the structure of six-membered ice ! 
 
-### Note: P3Mtip5 Code in Self-diffusion ###
+### Note: P3Mtip5 Code in Self-Diffusive ###
 
 It is noted that self-diffusion of the P3Mtip5 code is quite high, 
 namely, as much as 60 percent of the kinetic energy.
