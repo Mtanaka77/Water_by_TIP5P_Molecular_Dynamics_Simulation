@@ -22,7 +22,8 @@ above, remains basically the same due to the structure of six-membered ice !
 
 ### Note: P3Mtip5 Code in Self-diffusion ###
 
-It is noted that self-diffusion of the P3Mtip5 code is as much as 60 % of the kinetic energy.
+It is noted that self-diffusion of the P3Mtip5 code is quite high, 
+namely, as much as 60 percent of the kinetic energy.
 One must subtract the kinetic energy of the exc= 0 run by initial five periods (not used) plus 
 five periods of time from the run with exc> 0 for t> t_initial_period, typically of 50000. in 10 fs. .
 
