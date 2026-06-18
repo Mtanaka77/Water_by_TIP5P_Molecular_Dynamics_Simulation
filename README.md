@@ -27,7 +27,7 @@ namely, as much as 60 percents of the kinetic energy.
 One must subtract the kinetic energy. First, the exc= 0 run by initial five periods 
 (not used) and five periods of time are made.
 Then in the second, the subtraction is done for any exc> 0 runs in t> t_initial, 
-typically that is t_initial= 50000 in 10 fs, and be continued.
+typically that is t_initial= 50000 in 10 fs, and to be continued on.
 
 Methane hydrate is simulated by switching to if_xyz1=.true. of the TIP5P code, 
 like with the SPC/E code (Ref. 3). We need the initial coordinate file mh3.exyz and quaternions mh3.q. 
